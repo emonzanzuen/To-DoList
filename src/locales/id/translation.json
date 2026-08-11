@@ -1,0 +1,125 @@
+{
+  "app": { "name": "To-Do List" },
+  "nav": {
+    "dashboard": "Dashboard",
+    "tasks": "Tasks",
+    "categories": "Kategori",
+    "settings": "Pengaturan",
+    "ariaLabel": "Navigasi utama"
+  },
+  "common": {
+    "all": "Semua",
+    "create": "Buat",
+    "save": "Simpan",
+    "cancel": "Batal",
+    "close": "Tutup",
+    "search": "Cari",
+    "select": "Pilih",
+    "delete": "Hapus",
+    "viewAll": "Lihat Semua"
+  },
+  "dashboard": {
+    "greetingMorning": "Selamat pagi",
+    "greetingAfternoon": "Selamat siang",
+    "greetingEvening": "Selamat malam",
+    "subtitle": "Berikut ringkasan task kamu hari ini.",
+    "totalTasks": "Total Task",
+    "completed": "Selesai",
+    "pending": "Belum Selesai",
+    "progress": "Progres",
+    "recentTasks": "Task Terbaru",
+    "pinnedTasks": "Task Penting"
+  },
+  "task": {
+    "add": "Tambah Task",
+    "edit": "Edit Task",
+    "delete": "Hapus Task",
+    "pin": "Tandai penting",
+    "unpin": "Hapus tanda penting",
+    "title": "Judul",
+    "titlePlaceholder": "Contoh: Beli bahan makanan",
+    "description": "Deskripsi",
+    "descriptionPlaceholder": "Tambahkan detail task (opsional)",
+    "priority": "Prioritas",
+    "category": "Kategori",
+    "dueDate": "Tenggat Waktu",
+    "status": "Status",
+    "completed": "Selesai",
+    "pending": "Belum Selesai",
+    "overdue": "Terlambat",
+    "markComplete": "Tandai selesai",
+    "markPending": "Batalkan selesai",
+    "clearCompleted": "Hapus yang Selesai",
+    "searchPlaceholder": "Cari task berdasarkan judul atau deskripsi...",
+    "noTasks": "Belum ada task",
+    "noTasksDescription": "Buat task pertama kamu untuk memulai.",
+    "noResults": "Tidak ada hasil",
+    "noResultsDescription": "Coba ubah kata kunci pencarian atau filter kamu.",
+    "deleteConfirmTitle": "Hapus task ini?",
+    "deleteConfirmMessage": "Task \"{{title}}\" akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.",
+    "clearCompletedConfirmTitle": "Hapus semua task yang selesai?",
+    "clearCompletedConfirmMessage": "{{count}} task yang selesai akan dihapus permanen.",
+    "repeat": {
+      "label": "Pengulangan",
+      "none": "Tidak berulang",
+      "daily": "Setiap hari",
+      "weekly": "Setiap minggu",
+      "monthly": "Setiap bulan"
+    }
+  },
+  "tasksPage": { "subtitle": "Menampilkan {{count}} task" },
+  "priority": { "low": "Rendah", "medium": "Sedang", "high": "Tinggi" },
+  "category": {
+    "work": "Kerja",
+    "study": "Belajar",
+    "personal": "Pribadi",
+    "shopping": "Belanja",
+    "other": "Lainnya"
+  },
+  "filter": {
+    "status": "Status",
+    "priority": "Prioritas",
+    "category": "Kategori",
+    "sort": "Urutkan",
+    "sortNewest": "Terbaru",
+    "sortOldest": "Terlama",
+    "sortDueDate": "Tenggat Waktu",
+    "sortPriority": "Prioritas"
+  },
+  "categories": {
+    "title": "Kategori",
+    "subtitle": "Lihat dan kelola task berdasarkan kategori.",
+    "tasksCount": "{{count}} task",
+    "pendingCount": "{{count}} belum selesai"
+  },
+  "settings": {
+    "title": "Pengaturan",
+    "subtitle": "Atur preferensi aplikasi kamu.",
+    "language": "Bahasa",
+    "theme": "Tema",
+    "themeLight": "Terang",
+    "themeDark": "Gelap",
+    "dangerZone": "Zona Berbahaya",
+    "dangerDescription": "Menghapus seluruh data task dari aplikasi ini. Tindakan ini tidak dapat dibatalkan.",
+    "deleteAll": "Hapus Semua Data",
+    "deleteAllConfirmTitle": "Hapus semua data?",
+    "deleteAllConfirmMessage": "Seluruh task akan dihapus permanen dari LocalStorage. Tindakan ini tidak dapat dibatalkan."
+  },
+  "validation": {
+    "titleRequired": "Judul wajib diisi.",
+    "priorityRequired": "Prioritas wajib dipilih.",
+    "categoryRequired": "Kategori wajib dipilih.",
+    "invalidDate": "Tanggal tidak valid."
+  },
+  "toast": {
+    "taskCreated": "Task berhasil dibuat.",
+    "taskUpdated": "Task berhasil diperbarui.",
+    "taskDeleted": "Task berhasil dihapus.",
+    "taskPinned": "Task ditandai penting.",
+    "taskUnpinned": "Task tidak lagi ditandai penting.",
+    "taskRecurringCreated": "Task berulang baru telah dibuat.",
+    "completedCleared": "Task yang selesai telah dihapus.",
+    "allDataDeleted": "Semua data telah dihapus.",
+    "languageChanged": "Bahasa diubah ke {{language}}."
+  }
+}

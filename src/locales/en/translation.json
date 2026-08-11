@@ -1,0 +1,125 @@
+{
+  "app": { "name": "To-Do List" },
+  "nav": {
+    "dashboard": "Dashboard",
+    "tasks": "Tasks",
+    "categories": "Categories",
+    "settings": "Settings",
+    "ariaLabel": "Main navigation"
+  },
+  "common": {
+    "all": "All",
+    "create": "Create",
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close",
+    "search": "Search",
+    "select": "Select",
+    "delete": "Delete",
+    "viewAll": "View All"
+  },
+  "dashboard": {
+    "greetingMorning": "Good morning",
+    "greetingAfternoon": "Good afternoon",
+    "greetingEvening": "Good evening",
+    "subtitle": "Here is your task summary for today.",
+    "totalTasks": "Total Tasks",
+    "completed": "Completed",
+    "pending": "Pending",
+    "progress": "Progress",
+    "recentTasks": "Recent Tasks",
+    "pinnedTasks": "Important Tasks"
+  },
+  "task": {
+    "add": "Add Task",
+    "edit": "Edit Task",
+    "delete": "Delete Task",
+    "pin": "Mark as important",
+    "unpin": "Remove important mark",
+    "title": "Title",
+    "titlePlaceholder": "e.g. Buy groceries",
+    "description": "Description",
+    "descriptionPlaceholder": "Add task details (optional)",
+    "priority": "Priority",
+    "category": "Category",
+    "dueDate": "Due Date",
+    "status": "Status",
+    "completed": "Completed",
+    "pending": "Pending",
+    "overdue": "Overdue",
+    "markComplete": "Mark as complete",
+    "markPending": "Mark as pending",
+    "clearCompleted": "Clear Completed",
+    "searchPlaceholder": "Search tasks by title or description...",
+    "noTasks": "No tasks yet",
+    "noTasksDescription": "Create your first task to get started.",
+    "noResults": "No results found",
+    "noResultsDescription": "Try adjusting your search or filters.",
+    "deleteConfirmTitle": "Delete this task?",
+    "deleteConfirmMessage": "\"{{title}}\" will be permanently deleted. This action cannot be undone.",
+    "clearCompletedConfirmTitle": "Clear completed tasks?",
+    "clearCompletedConfirmMessage": "{{count}} completed tasks will be permanently deleted.",
+    "repeat": {
+      "label": "Repeat",
+      "none": "No repeat",
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "monthly": "Monthly"
+    }
+  },
+  "tasksPage": { "subtitle": "Showing {{count}} tasks" },
+  "priority": { "low": "Low", "medium": "Medium", "high": "High" },
+  "category": {
+    "work": "Work",
+    "study": "Study",
+    "personal": "Personal",
+    "shopping": "Shopping",
+    "other": "Other"
+  },
+  "filter": {
+    "status": "Status",
+    "priority": "Priority",
+    "category": "Category",
+    "sort": "Sort",
+    "sortNewest": "Newest",
+    "sortOldest": "Oldest",
+    "sortDueDate": "Due Date",
+    "sortPriority": "Priority"
+  },
+  "categories": {
+    "title": "Categories",
+    "subtitle": "Browse and manage tasks by category.",
+    "tasksCount": "{{count}} tasks",
+    "pendingCount": "{{count}} pending"
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Manage your application preferences.",
+    "language": "Language",
+    "theme": "Theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "dangerZone": "Danger Zone",
+    "dangerDescription": "Delete all task data from this application. This action cannot be undone.",
+    "deleteAll": "Delete All Data",
+    "deleteAllConfirmTitle": "Delete all data?",
+    "deleteAllConfirmMessage": "All tasks will be permanently removed from LocalStorage. This action cannot be undone."
+  },
+  "validation": {
+    "titleRequired": "Title is required.",
+    "priorityRequired": "Priority is required.",
+    "categoryRequired": "Category is required.",
+    "invalidDate": "Invalid date."
+  },
+  "toast": {
+    "taskCreated": "Task created successfully.",
+    "taskUpdated": "Task updated successfully.",
+    "taskDeleted": "Task deleted successfully.",
+    "taskPinned": "Task marked as important.",
+    "taskUnpinned": "Task unmarked as important.",
+    "taskRecurringCreated": "New recurring task created.",
+    "completedCleared": "Completed tasks cleared.",
+    "allDataDeleted": "All data has been deleted.",
+    "languageChanged": "Language changed to {{language}}."
+  }
+}
