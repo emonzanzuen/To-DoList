@@ -1,11 +1,19 @@
 {
-  "app": { "name": "To-Do List" },
+  "app": { "name": "Business Task Manager" },
   "nav": {
     "dashboard": "Dashboard",
     "tasks": "Tasks",
     "categories": "Categories",
+    "kanban": "Kanban Board",
+    "calendar": "Calendar",
+    "clients": "Clients",
+    "team": "Team",
+    "activity": "Activity Log",
     "settings": "Settings",
-    "ariaLabel": "Main navigation"
+    "ariaLabel": "Main navigation",
+    "projects": "Projects",
+    "more": "More",
+    "allMenu": "All Menu"
   },
   "common": {
     "all": "All",
@@ -18,6 +26,14 @@
     "delete": "Delete",
     "viewAll": "View All"
   },
+  "auth": {
+    "title": "Business Task Manager",
+    "subtitle": "Select an account to sign in.",
+    "mockNotice": "Demo Mode — Select a user to simulate multi-user with LocalStorage.",
+    "logout": "Sign Out",
+    "loggedInAs": "Signed in as {{name}}",
+    "role": { "admin": "Administrator", "manager": "Manager", "member": "Member" }
+  },
   "dashboard": {
     "greetingMorning": "Good morning",
     "greetingAfternoon": "Good afternoon",
@@ -26,9 +42,22 @@
     "totalTasks": "Total Tasks",
     "completed": "Completed",
     "pending": "Pending",
+    "inProgress": "In Progress",
+    "waiting": "Waiting",
+    "overdue": "Overdue",
     "progress": "Progress",
     "recentTasks": "Recent Tasks",
-    "pinnedTasks": "Important Tasks"
+    "pinnedTasks": "Important Tasks",
+    "myTasks": "{{name}}'s Tasks",
+    "myTasksCount": "My Tasks",
+    "taskDistribution": "Task Distribution",
+    "priorityDistribution": "Priority Distribution",
+    "burndown": "Burndown Chart",
+    "teamWorkload": "Team Workload",
+    "ideal": "Ideal",
+    "actual": "Actual",
+    "burndownNoData": "Not enough deadline data for burndown chart.",
+    "noWorkload": "No tasks assigned to team yet."
   },
   "task": {
     "add": "Add Task",
@@ -46,6 +75,8 @@
     "status": "Status",
     "completed": "Completed",
     "pending": "Pending",
+    "inProgress": "In Progress",
+    "waiting": "Waiting",
     "overdue": "Overdue",
     "markComplete": "Mark as complete",
     "markPending": "Mark as pending",
@@ -59,38 +90,68 @@
     "deleteConfirmMessage": "\"{{title}}\" will be permanently deleted. This action cannot be undone.",
     "clearCompletedConfirmTitle": "Clear completed tasks?",
     "clearCompletedConfirmMessage": "{{count}} completed tasks will be permanently deleted.",
-    "repeat": {
-      "label": "Repeat",
-      "none": "No repeat",
-      "daily": "Daily",
-      "weekly": "Weekly",
-      "monthly": "Monthly"
-    }
+    "project": "Project",
+    "projectPlaceholder": "Project name or ID",
+    "assignee": "Assignee",
+    "assigneePlaceholder": "Team member name or ID",
+    "milestone": "Milestone",
+    "timeSpent": "Time (minutes)",
+    "attachment": "Attachment (URL)",
+    "attachmentPlaceholder": "https://...",
+    "repeat": { "label": "Repeat", "none": "No repeat", "daily": "Daily", "weekly": "Weekly", "monthly": "Monthly" }
   },
-  "tasksPage": { "subtitle": "Showing {{count}} tasks" },
-  "priority": { "low": "Low", "medium": "Medium", "high": "High" },
-  "category": {
-    "work": "Work",
-    "study": "Study",
-    "personal": "Personal",
-    "shopping": "Shopping",
-    "other": "Other"
+  "tasksPage": {
+    "subtitle": "Showing {{count}} tasks",
+    "myTasks": "My Tasks Only",
+    "allTasks": "All Tasks",
+    "filteringMyTasks": "Showing tasks assigned to {{name}} only."
   },
-  "filter": {
+  "priority": { "low": "Low", "medium": "Medium", "high": "High", "urgent": "Urgent" },
+  "category": { "work": "Work", "study": "Study", "personal": "Personal", "shopping": "Shopping", "other": "Other" },
+  "approval": {
+    "none": "",
+    "pending": "Pending Approval",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "submit": "Submit for Approval",
+    "approve": "Approve",
+    "reject": "Reject",
+    "reset": "Reset Approval"
+  },
+  "checklist": { "title": "Checklist", "addPlaceholder": "Add checklist item...", "check": "Mark as done", "uncheck": "Unmark as done", "remove": "Remove item", "progress": "{{done}}/{{total}} completed" },
+  "comment": { "title": "Comments", "placeholder": "Write a comment...", "empty": "No comments yet.", "delete": "Delete comment" },
+  "filter": { "status": "Status", "priority": "Priority", "category": "Category", "sort": "Sort", "sortNewest": "Newest", "sortOldest": "Oldest", "sortDueDate": "Due Date", "sortPriority": "Priority" },
+  "categories": { "title": "Categories", "subtitle": "Browse and manage tasks by category.", "tasksCount": "{{count}} tasks", "pendingCount": "{{count}} pending" },
+  "kanban": { "title": "Kanban Board", "subtitle": "Visualize tasks by status.", "emptyColumn": "No tasks" },
+  "calendar": { "today": "Today" },
+  "client": { "title": "Clients", "subtitle": "Manage client data.", "add": "Add Client", "name": "Name", "email": "Email", "company": "Company", "empty": "No clients yet.", "deleteConfirm": "Delete client \"{{name}}\"?" },
+  "team": {
+    "title": "Team Management",
+    "subtitle": "Manage team members.",
+    "addUser": "Add User",
+    "editUser": "Edit User",
+    "name": "Name",
+    "email": "Email",
+    "role": "Role",
+    "team": "Team",
+    "empty": "No team members yet."
+  },
+  "activity": { "title": "Activity Log", "subtitle": "Application activity history.", "empty": "No activity yet.", "clear": "Clear Log" },
+  "project": {
+    "add": "Add Project",
+    "edit": "Edit Project",
+    "delete": "Delete Project",
+    "name": "Project Name",
+    "description": "Project Description",
+    "milestone": "Milestone",
     "status": "Status",
-    "priority": "Priority",
-    "category": "Category",
-    "sort": "Sort",
-    "sortNewest": "Newest",
-    "sortOldest": "Oldest",
-    "sortDueDate": "Due Date",
-    "sortPriority": "Priority"
-  },
-  "categories": {
-    "title": "Categories",
-    "subtitle": "Browse and manage tasks by category.",
-    "tasksCount": "{{count}} tasks",
-    "pendingCount": "{{count}} pending"
+    "active": "Active",
+    "completed": "Completed",
+    "archived": "Archived",
+    "noProjects": "No projects yet",
+    "noProjectsDescription": "Create your first project to organize tasks.",
+    "deleteConfirmTitle": "Delete this project?",
+    "deleteConfirmMessage": "Project \"{{name}}\" will be deleted. Associated tasks will not be deleted."
   },
   "settings": {
     "title": "Settings",
@@ -105,12 +166,7 @@
     "deleteAllConfirmTitle": "Delete all data?",
     "deleteAllConfirmMessage": "All tasks will be permanently removed from LocalStorage. This action cannot be undone."
   },
-  "validation": {
-    "titleRequired": "Title is required.",
-    "priorityRequired": "Priority is required.",
-    "categoryRequired": "Category is required.",
-    "invalidDate": "Invalid date."
-  },
+  "validation": { "titleRequired": "Title is required.", "priorityRequired": "Priority is required.", "categoryRequired": "Category is required.", "invalidDate": "Invalid date." },
   "toast": {
     "taskCreated": "Task created successfully.",
     "taskUpdated": "Task updated successfully.",

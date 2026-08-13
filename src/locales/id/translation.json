@@ -1,11 +1,19 @@
 {
-  "app": { "name": "To-Do List" },
+  "app": { "name": "Business Task Manager" },
   "nav": {
     "dashboard": "Dashboard",
     "tasks": "Tasks",
     "categories": "Kategori",
+    "kanban": "Kanban Board",
+    "calendar": "Kalender",
+    "clients": "Klien",
+    "team": "Tim",
+    "activity": "Activity Log",
     "settings": "Pengaturan",
-    "ariaLabel": "Navigasi utama"
+    "ariaLabel": "Navigasi utama",
+    "projects": "Projects",
+    "more": "Lainnya",
+    "allMenu": "Semua Menu"
   },
   "common": {
     "all": "Semua",
@@ -18,6 +26,14 @@
     "delete": "Hapus",
     "viewAll": "Lihat Semua"
   },
+  "auth": {
+    "title": "Business Task Manager",
+    "subtitle": "Pilih akun untuk masuk ke aplikasi.",
+    "mockNotice": "Mode Demo — Pilih user untuk simulasi multi-user dengan LocalStorage.",
+    "logout": "Keluar",
+    "loggedInAs": "Masuk sebagai {{name}}",
+    "role": { "admin": "Administrator", "manager": "Manager", "member": "Anggota" }
+  },
   "dashboard": {
     "greetingMorning": "Selamat pagi",
     "greetingAfternoon": "Selamat siang",
@@ -26,9 +42,22 @@
     "totalTasks": "Total Task",
     "completed": "Selesai",
     "pending": "Belum Selesai",
+    "inProgress": "Sedang Dikerjakan",
+    "waiting": "Menunggu",
+    "overdue": "Terlambat",
     "progress": "Progres",
     "recentTasks": "Task Terbaru",
-    "pinnedTasks": "Task Penting"
+    "pinnedTasks": "Task Penting",
+    "myTasks": "Task {{name}}",
+    "myTasksCount": "Task Saya",
+    "taskDistribution": "Distribusi Task",
+    "priorityDistribution": "Distribusi Prioritas",
+    "burndown": "Burndown Chart",
+    "teamWorkload": "Beban Kerja Tim",
+    "ideal": "Ideal",
+    "actual": "Aktual",
+    "burndownNoData": "Belum cukup data deadline untuk burndown chart.",
+    "noWorkload": "Belum ada task yang di-assign ke tim."
   },
   "task": {
     "add": "Tambah Task",
@@ -46,6 +75,8 @@
     "status": "Status",
     "completed": "Selesai",
     "pending": "Belum Selesai",
+    "inProgress": "Sedang Dikerjakan",
+    "waiting": "Menunggu",
     "overdue": "Terlambat",
     "markComplete": "Tandai selesai",
     "markPending": "Batalkan selesai",
@@ -59,6 +90,14 @@
     "deleteConfirmMessage": "Task \"{{title}}\" akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.",
     "clearCompletedConfirmTitle": "Hapus semua task yang selesai?",
     "clearCompletedConfirmMessage": "{{count}} task yang selesai akan dihapus permanen.",
+    "project": "Project",
+    "projectPlaceholder": "Nama atau ID project",
+    "assignee": "Assignee",
+    "assigneePlaceholder": "Nama atau ID anggota tim",
+    "milestone": "Milestone",
+    "timeSpent": "Waktu (menit)",
+    "attachment": "Lampiran (URL)",
+    "attachmentPlaceholder": "https://...",
     "repeat": {
       "label": "Pengulangan",
       "none": "Tidak berulang",
@@ -67,15 +106,33 @@
       "monthly": "Setiap bulan"
     }
   },
-  "tasksPage": { "subtitle": "Menampilkan {{count}} task" },
-  "priority": { "low": "Rendah", "medium": "Sedang", "high": "Tinggi" },
-  "category": {
-    "work": "Kerja",
-    "study": "Belajar",
-    "personal": "Pribadi",
-    "shopping": "Belanja",
-    "other": "Lainnya"
+  "tasksPage": {
+    "subtitle": "Menampilkan {{count}} task",
+    "myTasks": "Task Saya Saja",
+    "allTasks": "Semua Task",
+    "filteringMyTasks": "Menampilkan task milik {{name}} saja."
   },
+  "priority": { "low": "Rendah", "medium": "Sedang", "high": "Tinggi", "urgent": "Urgent" },
+  "category": { "work": "Kerja", "study": "Belajar", "personal": "Pribadi", "shopping": "Belanja", "other": "Lainnya" },
+  "approval": {
+    "none": "",
+    "pending": "Menunggu Approval",
+    "approved": "Disetujui",
+    "rejected": "Ditolak",
+    "submit": "Ajukan Approval",
+    "approve": "Setujui",
+    "reject": "Tolak",
+    "reset": "Reset Approval"
+  },
+  "checklist": {
+    "title": "Checklist",
+    "addPlaceholder": "Tambah item checklist...",
+    "check": "Tandai selesai",
+    "uncheck": "Batalkan selesai",
+    "remove": "Hapus item",
+    "progress": "{{done}}/{{total}} selesai"
+  },
+  "comment": { "title": "Komentar", "placeholder": "Tulis komentar...", "empty": "Belum ada komentar.", "delete": "Hapus komentar" },
   "filter": {
     "status": "Status",
     "priority": "Prioritas",
@@ -86,11 +143,37 @@
     "sortDueDate": "Tenggat Waktu",
     "sortPriority": "Prioritas"
   },
-  "categories": {
-    "title": "Kategori",
-    "subtitle": "Lihat dan kelola task berdasarkan kategori.",
-    "tasksCount": "{{count}} task",
-    "pendingCount": "{{count}} belum selesai"
+  "categories": { "title": "Kategori", "subtitle": "Lihat dan kelola task berdasarkan kategori.", "tasksCount": "{{count}} task", "pendingCount": "{{count}} belum selesai" },
+  "kanban": { "title": "Kanban Board", "subtitle": "Visualisasi task berdasarkan status.", "emptyColumn": "Tidak ada task" },
+  "calendar": { "today": "Hari Ini" },
+  "client": { "title": "Klien", "subtitle": "Kelola data klien.", "add": "Tambah Klien", "name": "Nama", "email": "Email", "company": "Perusahaan", "empty": "Belum ada klien.", "deleteConfirm": "Hapus klien \"{{name}}\"?" },
+  "team": {
+    "title": "Team Management",
+    "subtitle": "Kelola anggota tim.",
+    "addUser": "Tambah User",
+    "editUser": "Edit User",
+    "name": "Nama",
+    "email": "Email",
+    "role": "Role",
+    "team": "Tim",
+    "empty": "Belum ada anggota tim."
+  },
+  "activity": { "title": "Activity Log", "subtitle": "Riwayat aktivitas dalam aplikasi.", "empty": "Belum ada aktivitas.", "clear": "Hapus Log" },
+  "project": {
+    "add": "Tambah Project",
+    "edit": "Edit Project",
+    "delete": "Hapus Project",
+    "name": "Nama Project",
+    "description": "Deskripsi Project",
+    "milestone": "Milestone",
+    "status": "Status",
+    "active": "Aktif",
+    "completed": "Selesai",
+    "archived": "Diarsipkan",
+    "noProjects": "Belum ada project",
+    "noProjectsDescription": "Buat project pertama untuk mengorganisir task.",
+    "deleteConfirmTitle": "Hapus project ini?",
+    "deleteConfirmMessage": "Project \"{{name}}\" akan dihapus. Task yang terkait tidak akan dihapus."
   },
   "settings": {
     "title": "Pengaturan",
@@ -105,12 +188,7 @@
     "deleteAllConfirmTitle": "Hapus semua data?",
     "deleteAllConfirmMessage": "Seluruh task akan dihapus permanen dari LocalStorage. Tindakan ini tidak dapat dibatalkan."
   },
-  "validation": {
-    "titleRequired": "Judul wajib diisi.",
-    "priorityRequired": "Prioritas wajib dipilih.",
-    "categoryRequired": "Kategori wajib dipilih.",
-    "invalidDate": "Tanggal tidak valid."
-  },
+  "validation": { "titleRequired": "Judul wajib diisi.", "priorityRequired": "Prioritas wajib dipilih.", "categoryRequired": "Kategori wajib dipilih.", "invalidDate": "Tanggal tidak valid." },
   "toast": {
     "taskCreated": "Task berhasil dibuat.",
     "taskUpdated": "Task berhasil diperbarui.",

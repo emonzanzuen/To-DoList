@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ListTodo, Plus, SearchX, Trash2, SlidersHorizontal } from 'lucide-react';
+import { ListTodo, Plus, SearchX, Trash2, User } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
@@ -11,7 +11,9 @@ import { TaskList } from '../../components/task/TaskList';
 import { AddTaskModal } from '../../components/task/AddTaskModal';
 import { EditTaskModal } from '../../components/task/EditTaskModal';
 import { DeleteTaskModal } from '../../components/task/DeleteTaskModal';
+import { TaskDetailModal } from '../../components/task/TaskDetailModal';
 import { useTasks } from '../../context/TaskContext';
+import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { usePageEntrance } from '../../animations/gsap/usePageEntrance';
 import { getVisibleTasks } from '../../utils/taskUtils';
@@ -20,7 +22,8 @@ import type { CategoryFilter, Task, TaskFiltersState } from '../../types/task';
 
 export default function Tasks() {
   const { t } = useTranslation();
-  const { tasks, toggleTask, togglePin, clearCompleted } = useTasks();
+  const { tasks, toggleTask, togglePin, clearCompleted, reorderTasks } = useTasks();
+  const { user, canSeeAllTasks, canDeleteTask } = useAuth();
   const { showToast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const entranceRef = usePageEntrance();
@@ -36,12 +39,13 @@ export default function Tasks() {
     };
   });
 
+  const [showMyTasksOnly, setShowMyTasksOnly] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [deletingTask, setDeletingTask] = useState<Task | null>(null);
+  const [viewingTask, setViewingTask] = useState<Task | null>(null);
   const [clearOpen, setClearOpen] = useState(false);
 
-  // Sinkronkan filter kategori dengan URL (?category=work)
   useEffect(() => {
     const categoryParam = searchParams.get('category');
     const next: CategoryFilter = isCategory(categoryParam) ? categoryParam : 'all';
@@ -50,7 +54,17 @@ export default function Tasks() {
     );
   }, [searchParams]);
 
-  const visibleTasks = useMemo(() => getVisibleTasks(tasks, filters), [tasks, filters]);
+  const visibleTasks = useMemo(() => {
+    let filtered = getVisibleTasks(tasks, filters);
+    if (user && !canSeeAllTasks) {
+      filtered = filtered.filter((task) => task.assigneeId === user.id);
+    }
+    if (showMyTasksOnly && user && canSeeAllTasks) {
+      filtered = filtered.filter((task) => task.assigneeId === user.id);
+    }
+    return filtered;
+  }, [tasks, filters, showMyTasksOnly, user, canSeeAllTasks]);
+
   const completedCount = useMemo(
     () => tasks.filter((task) => task.status === 'completed').length,
     [tasks],
@@ -71,16 +85,17 @@ export default function Tasks() {
     showToast(t('toast.completedCleared'), 'success');
   };
 
-  // Hitung active filters untuk badge indicator
-  const activeFilterCount = [
-    filters.status !== 'all',
-    filters.priority !== 'all',
-    filters.category !== 'all',
-  ].filter(Boolean).length;
+  const handleReorder = useCallback(
+    (reordered: Task[]) => {
+      updateFilter('sort', 'custom');
+      reorderTasks(reordered);
+    },
+    [reorderTasks, updateFilter],
+  );
 
   return (
     <div ref={entranceRef} className="space-y-6">
-      {/* ===== HEADER SECTION ===== */}
+      {/* Header */}
       <div data-animate className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-ink">{t('nav.tasks')}</h1>
@@ -89,7 +104,17 @@ export default function Tasks() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {completedCount > 0 && (
+          {canSeeAllTasks && user && (
+            <Button
+              variant={showMyTasksOnly ? 'primary' : 'secondary'}
+              size="sm"
+              onClick={() => setShowMyTasksOnly((prev) => !prev)}
+            >
+              <User className="h-4 w-4" aria-hidden="true" />
+              {showMyTasksOnly ? t('tasksPage.allTasks') : t('tasksPage.myTasks')}
+            </Button>
+          )}
+          {canDeleteTask && completedCount > 0 && (
             <Button variant="secondary" size="sm" onClick={() => setClearOpen(true)}>
               <Trash2 className="h-4 w-4" aria-hidden="true" />
               {t('task.clearCompleted')}
@@ -102,29 +127,32 @@ export default function Tasks() {
         </div>
       </div>
 
-      {/* ===== SEARCH & FILTER BAR ===== */}
+      {/* Active filter indicator */}
+      {showMyTasksOnly && canSeeAllTasks && user && (
+        <div data-animate className="flex items-center gap-2 rounded-lg bg-primary/5 px-4 py-2 text-sm text-primary">
+          <User className="h-4 w-4 shrink-0" aria-hidden="true" />
+          <span>
+            {t('tasksPage.filteringMyTasks', { name: user.name })}
+            {' '}
+            <button
+              type="button"
+              onClick={() => setShowMyTasksOnly(false)}
+              className="font-medium underline hover:text-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+            >
+              {t('tasksPage.allTasks')}
+            </button>
+          </span>
+        </div>
+      )}
+
+      {/* Search & Filters */}
       <div data-animate className="rounded-2xl border border-line bg-surface p-4 shadow-sm">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-          {/* Search - takes full width on mobile, flexible on desktop */}
           <div className="flex-1">
             <SearchBar value={filters.search} onChange={(value) => updateFilter('search', value)} />
           </div>
-
-          {/* Divider vertical on desktop */}
           <div className="hidden h-8 w-px bg-line lg:block" aria-hidden="true" />
-
-          {/* Filter icon + active count badge */}
-          <div className="flex items-center gap-2 lg:hidden">
-            <SlidersHorizontal className="h-4 w-4 text-muted" aria-hidden="true" />
-            <span className="text-xs font-medium text-muted">
-              {activeFilterCount > 0
-                ? `${activeFilterCount} filter aktif`
-                : t('filter.sort')}
-            </span>
-          </div>
         </div>
-
-        {/* Filters row - always visible, compact grid */}
         <div className="mt-3 border-t border-line pt-3">
           <TaskFilters
             status={filters.status}
@@ -139,7 +167,7 @@ export default function Tasks() {
         </div>
       </div>
 
-      {/* ===== TASK LIST SECTION ===== */}
+      {/* Task List */}
       <div data-animate>
         {visibleTasks.length === 0 ? (
           tasks.length === 0 ? (
@@ -168,14 +196,17 @@ export default function Tasks() {
             onTogglePin={togglePin}
             onEdit={setEditingTask}
             onDelete={setDeletingTask}
+            onViewDetail={setViewingTask}
+            onReorder={handleReorder}
           />
         )}
       </div>
 
-      {/* ===== MODALS ===== */}
+      {/* Modals */}
       <AddTaskModal open={addOpen} onClose={() => setAddOpen(false)} />
       <EditTaskModal task={editingTask} onClose={() => setEditingTask(null)} />
       <DeleteTaskModal task={deletingTask} onClose={() => setDeletingTask(null)} />
+      <TaskDetailModal task={viewingTask} onClose={() => setViewingTask(null)} />
       <ConfirmDialog
         open={clearOpen}
         title={t('task.clearCompletedConfirmTitle')}

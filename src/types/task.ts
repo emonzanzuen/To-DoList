@@ -1,7 +1,22 @@
-export type TaskStatus = 'pending' | 'completed';
-export type TaskPriority = 'low' | 'medium' | 'high';
+export type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'waiting';
+export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
 export type TaskCategory = 'work' | 'study' | 'personal' | 'shopping' | 'other';
-export type RepeatInterval = 'none' | 'daily' | 'weekly' | 'monthly'; // ← BARU
+export type RepeatInterval = 'none' | 'daily' | 'weekly' | 'monthly';
+export type ApprovalStatus = 'none' | 'pending' | 'approved' | 'rejected';
+export type SortOption = 'newest' | 'oldest' | 'dueDate' | 'priority' | 'custom';
+
+export interface ChecklistItem {
+  id: string;
+  text: string;
+  done: boolean;
+}
+
+export interface Comment {
+  id: string;
+  userId: string;
+  text: string;
+  createdAt: string;
+}
 
 export interface Task {
   id: string;
@@ -10,10 +25,20 @@ export interface Task {
   status: TaskStatus;
   priority: TaskPriority;
   category: TaskCategory;
+  projectId: string | null;
+  assigneeId: string | null;
+  milestone: string | null;
   dueDate: string | null;
   isPinned: boolean;
-  repeat: RepeatInterval;       // ← BARU
-  nextRepeatAt: string | null;  // ← BARU: ISO date string untuk occurrence berikutnya
+  repeat: RepeatInterval;
+  nextRepeatAt: string | null;
+  canCompleteFrom: string | null;
+  recurringParentId: string | null;
+  checklist: ChecklistItem[];
+  comments: Comment[];
+  approvalStatus: ApprovalStatus;
+  attachmentUrl: string | null;
+  timeSpentMinutes: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -23,14 +48,18 @@ export interface TaskFormData {
   description: string;
   priority: TaskPriority;
   category: TaskCategory;
+  projectId: string;
+  assigneeId: string;
+  milestone: string;
   dueDate: string;
-  repeat: RepeatInterval; // ← BARU
+  repeat: RepeatInterval;
+  attachmentUrl: string;
+  timeSpentMinutes: number;
 }
 
 export type StatusFilter = 'all' | TaskStatus;
 export type PriorityFilter = 'all' | TaskPriority;
 export type CategoryFilter = 'all' | TaskCategory;
-export type SortOption = 'newest' | 'oldest' | 'dueDate' | 'priority';
 
 export interface TaskFiltersState {
   search: string;
@@ -38,4 +67,12 @@ export interface TaskFiltersState {
   priority: PriorityFilter;
   category: CategoryFilter;
   sort: SortOption;
+}
+
+export interface ActivityLog {
+  id: string;
+  userId: string;
+  action: string;
+  target: string;
+  timestamp: string;
 }

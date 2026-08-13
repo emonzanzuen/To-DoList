@@ -33,7 +33,12 @@ export function EditTaskModal({ task, onClose }: EditTaskModalProps) {
             priority: task.priority,
             category: task.category,
             dueDate: task.dueDate ?? '',
-            repeat: task.repeat, // ← BARU
+            repeat: task.repeat,
+            projectId: task.projectId ?? '',       // ← BARU
+            assigneeId: task.assigneeId ?? '',     // ← BARU
+            milestone: task.milestone ?? '',       // ← BARU
+            attachmentUrl: task.attachmentUrl ?? '',// ← BARU
+            timeSpentMinutes: task.timeSpentMinutes ?? 0, // ← BARU
           }}
           submitLabel={t('common.save')}
           onSubmit={handleSubmit}

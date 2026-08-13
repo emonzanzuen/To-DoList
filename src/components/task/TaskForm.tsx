@@ -18,6 +18,11 @@ interface TaskFormState {
   category: TaskCategory | '';
   dueDate: string;
   repeat: RepeatInterval;
+  projectId: string;
+  assigneeId: string;
+  milestone: string;
+  attachmentUrl: string;
+  timeSpentMinutes: number;
 }
 
 type FormErrors = Partial<Record<'title' | 'priority' | 'category' | 'dueDate', string>>;
@@ -31,6 +36,11 @@ export function TaskForm({ initialData, submitLabel, onSubmit, onCancel }: TaskF
     category: initialData?.category ?? '',
     dueDate: initialData?.dueDate ?? '',
     repeat: initialData?.repeat ?? 'none',
+    projectId: initialData?.projectId ?? '',
+    assigneeId: initialData?.assigneeId ?? '',
+    milestone: initialData?.milestone ?? '',
+    attachmentUrl: initialData?.attachmentUrl ?? '',
+    timeSpentMinutes: initialData?.timeSpentMinutes ?? 0,
   });
   const [errors, setErrors] = useState<FormErrors>({});
 
@@ -57,6 +67,11 @@ export function TaskForm({ initialData, submitLabel, onSubmit, onCancel }: TaskF
       category: form.category as TaskCategory,
       dueDate: form.dueDate,
       repeat: form.repeat,
+      projectId: form.projectId,
+      assigneeId: form.assigneeId,
+      milestone: form.milestone,
+      attachmentUrl: form.attachmentUrl,
+      timeSpentMinutes: form.timeSpentMinutes,
     });
   };
 
@@ -65,12 +80,13 @@ export function TaskForm({ initialData, submitLabel, onSubmit, onCancel }: TaskF
       hasError ? 'border-danger focus:ring-danger/40' : 'border-line focus:border-primary focus:ring-primary/40'
     }`;
 
+  const labelClass = 'mb-1.5 block text-sm font-medium text-ink';
+
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-4">
+      {/* Title */}
       <div>
-        <label htmlFor="task-title" className="mb-1.5 block text-sm font-medium text-ink">
-          {t('task.title')}
-        </label>
+        <label htmlFor="task-title" className={labelClass}>{t('task.title')}</label>
         <input
           id="task-title"
           type="text"
@@ -83,10 +99,9 @@ export function TaskForm({ initialData, submitLabel, onSubmit, onCancel }: TaskF
         {errors.title && <p role="alert" className="mt-1 text-xs text-danger">{errors.title}</p>}
       </div>
 
+      {/* Description */}
       <div>
-        <label htmlFor="task-description" className="mb-1.5 block text-sm font-medium text-ink">
-          {t('task.description')}
-        </label>
+        <label htmlFor="task-description" className={labelClass}>{t('task.description')}</label>
         <textarea
           id="task-description"
           rows={3}
@@ -97,11 +112,10 @@ export function TaskForm({ initialData, submitLabel, onSubmit, onCancel }: TaskF
         />
       </div>
 
+      {/* Priority + Category */}
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label htmlFor="task-priority" className="mb-1.5 block text-sm font-medium text-ink">
-            {t('task.priority')}
-          </label>
+          <label htmlFor="task-priority" className={labelClass}>{t('task.priority')}</label>
           <select
             id="task-priority"
             value={form.priority}
@@ -118,9 +132,7 @@ export function TaskForm({ initialData, submitLabel, onSubmit, onCancel }: TaskF
         </div>
 
         <div>
-          <label htmlFor="task-category" className="mb-1.5 block text-sm font-medium text-ink">
-            {t('task.category')}
-          </label>
+          <label htmlFor="task-category" className={labelClass}>{t('task.category')}</label>
           <select
             id="task-category"
             value={form.category}
@@ -137,11 +149,10 @@ export function TaskForm({ initialData, submitLabel, onSubmit, onCancel }: TaskF
         </div>
       </div>
 
+      {/* Due Date + Repeat */}
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label htmlFor="task-due-date" className="mb-1.5 block text-sm font-medium text-ink">
-            {t('task.dueDate')}
-          </label>
+          <label htmlFor="task-due-date" className={labelClass}>{t('task.dueDate')}</label>
           <input
             id="task-due-date"
             type="date"
@@ -153,11 +164,8 @@ export function TaskForm({ initialData, submitLabel, onSubmit, onCancel }: TaskF
           {errors.dueDate && <p role="alert" className="mt-1 text-xs text-danger">{errors.dueDate}</p>}
         </div>
 
-        {/* ← BARU: Repeat Interval Select */}
         <div>
-          <label htmlFor="task-repeat" className="mb-1.5 block text-sm font-medium text-ink">
-            {t('task.repeat.label')}
-          </label>
+          <label htmlFor="task-repeat" className={labelClass}>{t('task.repeat.label')}</label>
           <select
             id="task-repeat"
             value={form.repeat}
@@ -165,14 +173,80 @@ export function TaskForm({ initialData, submitLabel, onSubmit, onCancel }: TaskF
             className={inputClass(false)}
           >
             {REPEAT_INTERVALS.map((interval) => (
-              <option key={interval} value={interval}>
-                {t(`task.repeat.${interval}`)}
-              </option>
+              <option key={interval} value={interval}>{t(`task.repeat.${interval}`)}</option>
             ))}
           </select>
         </div>
       </div>
 
+      {/* Project + Assignee */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label htmlFor="task-project" className={labelClass}>{t('task.project')}</label>
+          <input
+            id="task-project"
+            type="text"
+            value={form.projectId}
+            onChange={(e) => setForm((p) => ({ ...p, projectId: e.target.value }))}
+            placeholder={t('task.projectPlaceholder')}
+            className={inputClass(false)}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="task-assignee" className={labelClass}>{t('task.assignee')}</label>
+          <input
+            id="task-assignee"
+            type="text"
+            value={form.assigneeId}
+            onChange={(e) => setForm((p) => ({ ...p, assigneeId: e.target.value }))}
+            placeholder={t('task.assigneePlaceholder')}
+            className={inputClass(false)}
+          />
+        </div>
+      </div>
+
+      {/* Milestone + Time Spent */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label htmlFor="task-milestone" className={labelClass}>{t('task.milestone')}</label>
+          <input
+            id="task-milestone"
+            type="date"
+            value={form.milestone}
+            onChange={(e) => setForm((p) => ({ ...p, milestone: e.target.value }))}
+            className={inputClass(false)}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="task-time" className={labelClass}>{t('task.timeSpent')}</label>
+          <input
+            id="task-time"
+            type="number"
+            min={0}
+            value={form.timeSpentMinutes}
+            onChange={(e) => setForm((p) => ({ ...p, timeSpentMinutes: Number(e.target.value) || 0 }))}
+            placeholder="0"
+            className={inputClass(false)}
+          />
+        </div>
+      </div>
+
+      {/* Attachment URL */}
+      <div>
+        <label htmlFor="task-attachment" className={labelClass}>{t('task.attachment')}</label>
+        <input
+          id="task-attachment"
+          type="url"
+          value={form.attachmentUrl}
+          onChange={(e) => setForm((p) => ({ ...p, attachmentUrl: e.target.value }))}
+          placeholder={t('task.attachmentPlaceholder')}
+          className={inputClass(false)}
+        />
+      </div>
+
+      {/* Actions */}
       <div className="flex justify-end gap-3 pt-2">
         <Button type="button" variant="secondary" onClick={onCancel}>
           {t('common.cancel')}
