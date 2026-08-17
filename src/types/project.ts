@@ -7,6 +7,7 @@ export interface Project {
   milestone: string | null;
   status: ProjectStatus;
   memberIds: string[];
+  clientId: string | null;
   createdBy: string;
   createdAt: string;
   updatedAt: string;

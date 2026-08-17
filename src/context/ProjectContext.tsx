@@ -16,8 +16,8 @@ const PROJECTS_STORAGE_KEY = 'app_projects';
 
 interface ProjectContextValue {
   projects: Project[];
-  addProject: (name: string, description: string, milestone: string, creatorId: string) => void;
-  updateProject: (id: string, name: string, description: string, milestone: string, status: Project['status']) => void;
+  addProject: (name: string, description: string, milestone: string, creatorId: string, clientId?: string) => void;
+  updateProject: (id: string, name: string, description: string, milestone: string, status: Project['status'], clientId?: string) => void;
   deleteProject: (id: string) => void;
   getProjectById: (id: string) => Project | undefined;
   inviteMember: (projectId: string, userId: string) => void;
@@ -28,27 +28,26 @@ interface ProjectContextValue {
 const ProjectContext = createContext<ProjectContextValue | null>(null);
 
 function loadProjects(): Project[] {
-  const data = readStorage<unknown>(PROJECTS_STORAGE_KEY, []);
-  if (!Array.isArray(data)) return [];
-  return data
-    .filter(
-      (item): item is Record<string, unknown> =>
-        typeof item === 'object' &&
-        item !== null &&
-        typeof item.id === 'string' &&
-        typeof item.name === 'string',
-    )
-    .map((item) => ({
-      id: String(item.id),
-      name: String(item.name),
+  try {
+    const raw = localStorage.getItem(PROJECTS_STORAGE_KEY);
+    if (!raw) return [];
+    const data = JSON.parse(raw);
+    if (!Array.isArray(data)) return [];
+    return data.map((item: Record<string, unknown>) => ({
+      id: String(item.id ?? ''),
+      name: String(item.name ?? ''),
       description: String(item.description ?? ''),
       milestone: (item.milestone as string | null) ?? null,
-      status: (item.status as Project['status']) ?? 'active',
-      memberIds: Array.isArray(item.memberIds) ? (item.memberIds as string[]) : [],
+      status: (['active', 'completed', 'archived'].includes(String(item.status)) ? String(item.status) : 'active') as Project['status'],
+      memberIds: Array.isArray(item.memberIds) ? item.memberIds.filter((id): id is string => typeof id === 'string') : [],
+      clientId: (item.clientId as string | null) ?? null,
       createdBy: String(item.createdBy ?? ''),
       createdAt: String(item.createdAt ?? new Date().toISOString()),
       updatedAt: String(item.updatedAt ?? new Date().toISOString()),
-    })) as Project[];
+    }));
+  } catch {
+    return [];
+  }
 }
 
 export function ProjectProvider({ children }: { children: ReactNode }) {
@@ -59,7 +58,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   }, [projects]);
 
   const addProject = useCallback(
-    (name: string, description: string, milestone: string, creatorId: string) => {
+    (name: string, description: string, milestone: string, creatorId: string, clientId?: string) => {
       const now = nowISO();
       const project: Project = {
         id: generateId(),
@@ -68,6 +67,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         milestone: milestone || null,
         status: 'active',
         memberIds: creatorId ? [creatorId] : [],
+        clientId: clientId || null,
         createdBy: creatorId,
         createdAt: now,
         updatedAt: now,
@@ -78,7 +78,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   );
 
   const updateProject = useCallback(
-    (id: string, name: string, description: string, milestone: string, status: Project['status']) => {
+    (id: string, name: string, description: string, milestone: string, status: Project['status'], clientId?: string) => {
       setProjects((prev) =>
         prev.map((p) =>
           p.id === id
@@ -88,6 +88,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
                 description: description.trim(),
                 milestone: milestone || null,
                 status,
+                clientId: clientId !== undefined ? (clientId || null) : p.clientId,
                 updatedAt: nowISO(),
               }
             : p,

@@ -3,7 +3,6 @@ import { ThemeProvider } from './context/ThemeContext';
 import { ToastProvider } from './context/ToastContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ProjectProvider } from './context/ProjectContext';
-import ProjectDetail from './pages/Projects/ProjectDetail';
 import { MilestoneProvider } from './context/MilestoneContext';
 import { ActivityProvider } from './context/ActivityContext';
 import { ClientProvider } from './context/ClientContext';
@@ -13,12 +12,14 @@ import Dashboard from './pages/Dashboard/Dashboard';
 import Tasks from './pages/Tasks/Tasks';
 import Categories from './pages/Categories/Categories';
 import ProjectsPage from './pages/Projects/Projects';
+import ProjectDetail from './pages/Projects/ProjectDetail';
 import MilestonesPage from './pages/Milestones/Milestones';
 import MilestoneDetail from './pages/Milestones/MilestoneDetail';
 import KanbanPage from './pages/Kanban/Kanban';
 import CalendarPage from './pages/Calendar/Calendar';
 import TeamManagement from './pages/Team/TeamManagement';
 import ClientsPage from './pages/Clients/Clients';
+import ClientDetail from './pages/Clients/ClientDetail';
 import ActivityLogPage from './pages/ActivityLog/ActivityLog';
 import Settings from './pages/Settings/Settings';
 import Login from './pages/Login/Login';
@@ -36,13 +37,14 @@ function ProtectedRoutes() {
         <Route index element={<Dashboard />} />
         <Route path="/tasks" element={<Tasks />} />
         <Route path="/categories" element={<Categories />} />
-        <Route path="/projects" element={<ProjectsPage />} />
         <Route path="/projects/:id" element={<ProjectDetail />} />
+        <Route path="/projects" element={<ProjectsPage />} />
         <Route path="/milestones/:id" element={<MilestoneDetail />} />
         <Route path="/milestones" element={<MilestonesPage />} />
         <Route path="/kanban" element={<KanbanPage />} />
         <Route path="/calendar" element={<CalendarPage />} />
         <Route path="/team" element={<TeamManagement />} />
+        <Route path="/clients/:id" element={<ClientDetail />} />
         <Route path="/clients" element={<ClientsPage />} />
         <Route path="/activity" element={<ActivityLogPage />} />
         <Route path="/audit-log" element={<ActivityLogPage />} />
