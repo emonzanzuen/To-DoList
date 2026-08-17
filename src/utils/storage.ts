@@ -1,9 +1,23 @@
-import { STORAGE_KEYS } from '../constants';
-import type { Task, RepeatInterval } from '../types/task';
+import type { Task } from '../types/task';
+import type { Project } from '../types/project';
+import type { Milestone } from '../types/milestone';
+import type { User } from '../types/user';
+import type { ActivityLog } from '../types/task';
+
+const TASKS_KEY = 'app_tasks';
+const PROJECTS_KEY = 'app_projects';
+const MILESTONES_KEY = 'app_milestones';
+const USERS_KEY = 'app_users';
+const CURRENT_USER_KEY = 'app_current_user';
+const ACTIVITY_LOG_KEY = 'app_activity_log';
+const SETTINGS_KEY = 'app_settings';
+const CLIENTS_KEY = 'app_clients';
+
+// === Generic helpers ===
 
 export function readStorage<T>(key: string, fallback: T): T {
   try {
-    const raw = window.localStorage.getItem(key);
+    const raw = localStorage.getItem(key);
     if (raw === null) return fallback;
     return JSON.parse(raw) as T;
   } catch {
@@ -11,126 +25,141 @@ export function readStorage<T>(key: string, fallback: T): T {
   }
 }
 
-export function writeStorage<T>(key: string, value: T): boolean {
+export function writeStorage<T>(key: string, value: T): void {
   try {
-    window.localStorage.setItem(key, JSON.stringify(value));
-    return true;
+    localStorage.setItem(key, JSON.stringify(value));
   } catch {
-    return false;
+    // Storage full or unavailable — silently fail
   }
 }
 
-export function removeStorage(key: string): void {
-  try {
-    window.localStorage.removeItem(key);
-  } catch {
-    // abaikan
-  }
-}
+// === Tasks ===
 
-const VALID_STATUS = ['pending', 'in_progress', 'completed', 'waiting'];
-const VALID_PRIORITY = ['low', 'medium', 'high', 'urgent'];
-const VALID_CATEGORY = ['work', 'study', 'personal', 'shopping', 'other'];
-const VALID_REPEAT: RepeatInterval[] = ['none', 'daily', 'weekly', 'monthly'];
-const VALID_APPROVAL = ['none', 'pending', 'approved', 'rejected'];
-
-export function isValidTask(value: unknown): value is Task {
-  if (typeof value !== 'object' || value === null) return false;
-  const task = value as Record<string, unknown>;
-  return (
-    typeof task.id === 'string' &&
-    typeof task.title === 'string' &&
-    typeof task.description === 'string' &&
-    typeof task.status === 'string' &&
-    VALID_STATUS.includes(task.status) &&
-    typeof task.priority === 'string' &&
-    VALID_PRIORITY.includes(task.priority) &&
-    typeof task.category === 'string' &&
-    VALID_CATEGORY.includes(task.category) &&
-    (task.projectId === null || typeof task.projectId === 'string') &&
-    (task.assigneeId === null || typeof task.assigneeId === 'string') &&
-    (task.milestone === null || typeof task.milestone === 'string') &&
-    (task.dueDate === null || typeof task.dueDate === 'string') &&
-    typeof task.isPinned === 'boolean' &&
-    typeof task.repeat === 'string' &&
-    VALID_REPEAT.includes(task.repeat as RepeatInterval) &&
-    (task.nextRepeatAt === null || typeof task.nextRepeatAt === 'string') &&
-    Array.isArray(task.checklist) &&
-    Array.isArray(task.comments) &&
-    typeof task.approvalStatus === 'string' &&
-    VALID_APPROVAL.includes(task.approvalStatus) &&
-    (task.attachmentUrl === null || typeof task.attachmentUrl === 'string') &&
-    typeof task.timeSpentMinutes === 'number' &&
-    typeof task.createdAt === 'string' &&
-    typeof task.updatedAt === 'string'
-  );
-}
-
-/**
- * Migrate task lama ke struktur business baru.
- * Menangani semua kombinasi field yang mungkin hilang dari versi sebelumnya.
- */
-function migrateTask(raw: unknown): Task | null {
-  if (isValidTask(raw)) return raw;
-
-  if (
-    typeof raw === 'object' &&
-    raw !== null &&
-    typeof (raw as Record<string, unknown>).id === 'string' &&
-    typeof (raw as Record<string, unknown>).title === 'string'
-  ) {
-    const t = raw as Record<string, unknown>;
-
-    // Validasi minimal: harus punya status, priority, category, timestamps
-    const hasValidStatus = typeof t.status === 'string' && VALID_STATUS.includes(t.status);
-    const hasValidPriority = typeof t.priority === 'string' && VALID_PRIORITY.includes(t.priority);
-    const hasValidCategory = typeof t.category === 'string' && VALID_CATEGORY.includes(t.category);
-    const hasTimestamps = typeof t.createdAt === 'string' && typeof t.updatedAt === 'string';
-
-    // Fallback untuk priority lama yang tidak punya 'urgent'
-    const safePriority = hasValidPriority
-      ? (t.priority as Task['priority'])
-      : 'medium';
-
-    // Fallback untuk status lama yang hanya punya pending/completed
-    const safeStatus = hasValidStatus
-      ? (t.status as Task['status'])
-      : 'pending';
-
-    if (hasTimestamps && typeof t.title === 'string') {
-      return {
-        id: t.id as string,
-        title: t.title as string,
-        description: (t.description as string) ?? '',
-        status: safeStatus,
-        priority: safePriority,
-        category: hasValidCategory ? (t.category as Task['category']) : 'work',
-        projectId: (t.projectId as string | null) ?? null,
-        assigneeId: (t.assigneeId as string | null) ?? null,
-        milestone: (t.milestone as string | null) ?? null,
-        dueDate: (t.dueDate as string | null) ?? null,
-        isPinned: typeof t.isPinned === 'boolean' ? t.isPinned : false,
-        repeat: (VALID_REPEAT.includes(t.repeat as RepeatInterval) ? t.repeat : 'none') as RepeatInterval,
-        nextRepeatAt: (t.nextRepeatAt as string | null) ?? null,
-        checklist: Array.isArray(t.checklist) ? (t.checklist as Task['checklist']) : [],
-        comments: Array.isArray(t.comments) ? (t.comments as Task['comments']) : [],
-        approvalStatus: (VALID_APPROVAL.includes(t.approvalStatus as string) ? t.approvalStatus : 'none') as Task['approvalStatus'],
-        attachmentUrl: (t.attachmentUrl as string | null) ?? null,
-        timeSpentMinutes: typeof t.timeSpentMinutes === 'number' ? t.timeSpentMinutes : 0,
-        createdAt: t.createdAt as string,
-        updatedAt: t.updatedAt as string,
-      };
-    }
-  }
-  return null;
+function normalizeAssignees(t: Record<string, unknown>): string[] {
+  if (Array.isArray(t.assigneeIds)) return t.assigneeIds as string[];
+  if (typeof t.assigneeId === 'string' && t.assigneeId) return [t.assigneeId as string];
+  return [];
 }
 
 export function loadTasks(): Task[] {
-  const data = readStorage<unknown>(STORAGE_KEYS.TASKS, []);
+  const data = readStorage<unknown[]>(TASKS_KEY, []);
   if (!Array.isArray(data)) return [];
-  return data.map(migrateTask).filter((t): t is Task => t !== null);
+  return data.map((item) => {
+    const t = item as Record<string, unknown>;
+    return {
+      id: String(t.id ?? ''),
+      title: String(t.title ?? ''),
+      description: String(t.description ?? ''),
+      status: (t.status as Task['status']) ?? 'pending',
+      priority: (t.priority as Task['priority']) ?? 'medium',
+      category: (t.category as Task['category']) ?? 'work',
+      projectId: (t.projectId as string | null) ?? null,
+      assigneeIds: normalizeAssignees(t),
+      milestone: (t.milestone as string | null) ?? null,
+      dueDate: (t.dueDate as string | null) ?? null,
+      isPinned: Boolean(t.isPinned),
+      repeat: (t.repeat as Task['repeat']) ?? 'none',
+      nextRepeatAt: (t.nextRepeatAt as string | null) ?? null,
+      canCompleteFrom: (t.canCompleteFrom as string | null) ?? null,
+      recurringParentId: (t.recurringParentId as string | null) ?? null,
+      checklist: Array.isArray(t.checklist) ? t.checklist : [],
+      comments: Array.isArray(t.comments) ? t.comments : [],
+      approvalStatus: (t.approvalStatus as Task['approvalStatus']) ?? 'none',
+      attachmentUrl: (t.attachmentUrl as string | null) ?? null,
+      timeSpentMinutes: Number(t.timeSpentMinutes) || 0,
+      createdAt: String(t.createdAt ?? new Date().toISOString()),
+      updatedAt: String(t.updatedAt ?? new Date().toISOString()),
+    } as Task;
+  });
 }
 
-export function saveTasks(tasks: Task[]): boolean {
-  return writeStorage(STORAGE_KEYS.TASKS, tasks);
+export function saveTasks(tasks: Task[]): void {
+  writeStorage(TASKS_KEY, tasks);
+}
+
+// === Projects ===
+
+export function loadProjects(): Project[] {
+  return readStorage<Project[]>(PROJECTS_KEY, []);
+}
+
+export function saveProjects(projects: Project[]): void {
+  writeStorage(PROJECTS_KEY, projects);
+}
+
+// === Milestones ===
+
+export function loadMilestones(): Milestone[] {
+  return readStorage<Milestone[]>(MILESTONES_KEY, []);
+}
+
+export function saveMilestones(milestones: Milestone[]): void {
+  writeStorage(MILESTONES_KEY, milestones);
+}
+
+// === Users ===
+
+export function loadUsers(): User[] {
+  return readStorage<User[]>(USERS_KEY, []);
+}
+
+export function saveUsers(users: User[]): void {
+  writeStorage(USERS_KEY, users);
+}
+
+// === Current User ===
+
+export function loadCurrentUser(): User | null {
+  return readStorage<User | null>(CURRENT_USER_KEY, null);
+}
+
+export function saveCurrentUser(user: User | null): void {
+  if (user === null) {
+    localStorage.removeItem(CURRENT_USER_KEY);
+  } else {
+    writeStorage(CURRENT_USER_KEY, user);
+  }
+}
+
+// === Activity Log ===
+
+export function loadActivityLog(): ActivityLog[] {
+  return readStorage<ActivityLog[]>(ACTIVITY_LOG_KEY, []);
+}
+
+export function saveActivityLog(logs: ActivityLog[]): void {
+  writeStorage(ACTIVITY_LOG_KEY, logs);
+}
+
+// === Settings ===
+
+export interface AppSettings {
+  language: string;
+  theme: string;
+}
+
+export function loadSettings(): AppSettings {
+  return readStorage<AppSettings>(SETTINGS_KEY, { language: 'id', theme: 'light' });
+}
+
+export function saveSettings(settings: AppSettings): void {
+  writeStorage(SETTINGS_KEY, settings);
+}
+
+// === Clients ===
+
+export interface Client {
+  id: string;
+  name: string;
+  email: string;
+  company: string;
+  createdAt: string;
+}
+
+export function loadClients(): Client[] {
+  return readStorage<Client[]>(CLIENTS_KEY, []);
+}
+
+export function saveClients(clients: Client[]): void {
+  writeStorage(CLIENTS_KEY, clients);
 }

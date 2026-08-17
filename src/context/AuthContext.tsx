@@ -1,8 +1,10 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useMemo, useState, useEffect, type ReactNode } from 'react';
 import { MOCK_USERS, type User, type UserRole } from '../types/user';
 import { readStorage, writeStorage } from '../utils/storage';
 
 const AUTH_STORAGE_KEY = 'app_current_user';
+const USERS_CUSTOM_KEY = 'app_users_custom';
+const USER_OVERRIDES_KEY = 'app_user_overrides';
 
 interface AuthContextValue {
   user: User | null;
@@ -26,17 +28,51 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-function getStoredUser(): User | null {
-  const stored = readStorage<string>(AUTH_STORAGE_KEY, '');
-  if (!stored) return null;
-  return MOCK_USERS.find((u) => u.id === stored) ?? null;
+function loadCustomUsers(): User[] {
+  const data = readStorage<unknown>(USERS_CUSTOM_KEY, []);
+  return Array.isArray(data) ? (data as User[]) : [];
+}
+
+function loadUserOverrides(): Record<string, Partial<User>> {
+  const data = readStorage<unknown>(USER_OVERRIDES_KEY, {});
+  return typeof data === 'object' && data !== null ? (data as Record<string, Partial<User>>) : {};
+}
+
+function getAllUsers(): User[] {
+  const customUsers = loadCustomUsers();
+  const overrides = loadUserOverrides();
+  return [
+    ...MOCK_USERS.map((u) => {
+      const override = overrides[u.id];
+      return override ? { ...u, ...override } : u;
+    }),
+    ...customUsers,
+  ];
+}
+
+function findUserById(userId: string): User | null {
+  return getAllUsers().find((u) => u.id === userId) ?? null;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(() => getStoredUser());
+  const [user, setUser] = useState<User | null>(() => {
+    const storedId = readStorage<string>(AUTH_STORAGE_KEY, '');
+    if (!storedId) return null;
+    return findUserById(storedId);
+  });
+
+  // Refresh user dari allUsers saat storage berubah (misal Admin edit user di tab lain)
+  useEffect(() => {
+    if (user) {
+      const refreshed = findUserById(user.id);
+      if (refreshed && JSON.stringify(refreshed) !== JSON.stringify(user)) {
+        setUser(refreshed);
+      }
+    }
+  });
 
   const login = useCallback((userId: string) => {
-    const found = MOCK_USERS.find((u) => u.id === userId);
+    const found = findUserById(userId);
     if (found) {
       setUser(found);
       writeStorage(AUTH_STORAGE_KEY, found.id);
@@ -50,9 +86,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const role: UserRole | null = user?.role ?? null;
 
+  // Gabungkan semua users: MOCK_USERS + overrides + customUsers
+  const allUsers = useMemo(() => getAllUsers(), [user]);
+
   const value = useMemo<AuthContextValue>(() => ({
     user,
-    users: MOCK_USERS,
+    users: allUsers,
     login,
     logout,
     isAuthenticated: user !== null,
@@ -72,7 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (role === 'admin' || role === 'manager') return true;
       return assigneeId === user.id;
     },
-  }), [user, login, logout, role]);
+  }), [user, allUsers, login, logout, role]);
 
   return (
     <AuthContext.Provider value={value}>

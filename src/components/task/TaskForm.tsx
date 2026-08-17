@@ -3,6 +3,9 @@ import { useTranslation } from 'react-i18next';
 import { CATEGORIES, PRIORITIES, REPEAT_INTERVALS } from '../../constants';
 import type { RepeatInterval, TaskCategory, TaskFormData, TaskPriority } from '../../types/task';
 import { Button } from '../ui/Button';
+import { useProjects } from '../../context/ProjectContext';
+import { useMilestones } from '../../context/MilestoneContext';
+import { useAuth } from '../../context/AuthContext';
 
 interface TaskFormProps {
   initialData?: TaskFormData;
@@ -19,7 +22,7 @@ interface TaskFormState {
   dueDate: string;
   repeat: RepeatInterval;
   projectId: string;
-  assigneeId: string;
+  assigneeIds: string[];
   milestone: string;
   attachmentUrl: string;
   timeSpentMinutes: number;
@@ -29,6 +32,10 @@ type FormErrors = Partial<Record<'title' | 'priority' | 'category' | 'dueDate', 
 
 export function TaskForm({ initialData, submitLabel, onSubmit, onCancel }: TaskFormProps) {
   const { t } = useTranslation();
+  const { projects } = useProjects();
+  const { milestones } = useMilestones();
+  const { users } = useAuth();
+
   const [form, setForm] = useState<TaskFormState>({
     title: initialData?.title ?? '',
     description: initialData?.description ?? '',
@@ -37,12 +44,17 @@ export function TaskForm({ initialData, submitLabel, onSubmit, onCancel }: TaskF
     dueDate: initialData?.dueDate ?? '',
     repeat: initialData?.repeat ?? 'none',
     projectId: initialData?.projectId ?? '',
-    assigneeId: initialData?.assigneeId ?? '',
+    assigneeIds: initialData?.assigneeIds ?? [],
     milestone: initialData?.milestone ?? '',
     attachmentUrl: initialData?.attachmentUrl ?? '',
     timeSpentMinutes: initialData?.timeSpentMinutes ?? 0,
   });
   const [errors, setErrors] = useState<FormErrors>({});
+
+  // Filter milestones berdasarkan project yang dipilih
+  const filteredMilestones = form.projectId
+    ? milestones.filter((m) => m.projectId === form.projectId)
+    : milestones;
 
   const validate = (): FormErrors => {
     const next: FormErrors = {};
@@ -68,7 +80,7 @@ export function TaskForm({ initialData, submitLabel, onSubmit, onCancel }: TaskF
       dueDate: form.dueDate,
       repeat: form.repeat,
       projectId: form.projectId,
-      assigneeId: form.assigneeId,
+      assigneeIds: form.assigneeIds,
       milestone: form.milestone,
       attachmentUrl: form.attachmentUrl,
       timeSpentMinutes: form.timeSpentMinutes,
@@ -183,26 +195,58 @@ export function TaskForm({ initialData, submitLabel, onSubmit, onCancel }: TaskF
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor="task-project" className={labelClass}>{t('task.project')}</label>
-          <input
+          <select
             id="task-project"
-            type="text"
             value={form.projectId}
-            onChange={(e) => setForm((p) => ({ ...p, projectId: e.target.value }))}
-            placeholder={t('task.projectPlaceholder')}
+            onChange={(e) => setForm((p) => ({ ...p, projectId: e.target.value, milestone: '' }))}
             className={inputClass(false)}
-          />
+          >
+            <option value="">{t('task.noProject') || 'Tanpa Project'}</option>
+            {projects.map((p) => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </select>
         </div>
 
         <div>
-          <label htmlFor="task-assignee" className={labelClass}>{t('task.assignee')}</label>
-          <input
-            id="task-assignee"
-            type="text"
-            value={form.assigneeId}
-            onChange={(e) => setForm((p) => ({ ...p, assigneeId: e.target.value }))}
-            placeholder={t('task.assigneePlaceholder')}
-            className={inputClass(false)}
-          />
+          <label className={labelClass}>{t('task.assignee')}</label>
+          <div className="max-h-40 overflow-y-auto rounded-lg border border-line bg-background p-2 space-y-1 scrollbar-thin">
+            {users.length === 0 && (
+              <p className="text-xs text-muted px-2 py-1">Tidak ada user tersedia</p>
+            )}
+            {users.map((u) => {
+              const isChecked = form.assigneeIds.includes(u.id);
+              return (
+                <label
+                  key={u.id}
+                  className={`flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-surface ${
+                    isChecked ? 'bg-primary/5 text-primary' : 'text-ink'
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={isChecked}
+                    onChange={() => {
+                      setForm((p) => ({
+                        ...p,
+                        assigneeIds: isChecked
+                          ? p.assigneeIds.filter((id) => id !== u.id)
+                          : [...p.assigneeIds, u.id],
+                      }));
+                    }}
+                    className="h-4 w-4 rounded border-line text-primary focus:ring-primary/40"
+                  />
+                  <span className="flex-1 truncate">{u.name}</span>
+                  <span className="text-xs text-muted">{t(`auth.role.${u.role}`)}</span>
+                </label>
+              );
+            })}
+          </div>
+          {form.assigneeIds.length > 0 && (
+            <p className="mt-1 text-xs text-muted">
+              {form.assigneeIds.length} orang ditugaskan
+            </p>
+          )}
         </div>
       </div>
 
@@ -210,17 +254,32 @@ export function TaskForm({ initialData, submitLabel, onSubmit, onCancel }: TaskF
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor="task-milestone" className={labelClass}>{t('task.milestone')}</label>
-          <input
+          <select
             id="task-milestone"
-            type="date"
             value={form.milestone}
             onChange={(e) => setForm((p) => ({ ...p, milestone: e.target.value }))}
             className={inputClass(false)}
-          />
+            disabled={filteredMilestones.length === 0}
+          >
+            <option value="">
+              {filteredMilestones.length === 0
+                ? (t('task.noMilestone') || 'Tidak ada milestone')
+                : (t('task.selectMilestone') || 'Pilih Milestone')}
+            </option>
+            {filteredMilestones.map((m) => (
+              <option key={m.id} value={m.name}>{m.name}</option>
+            ))}
+          </select>
+          {form.projectId && filteredMilestones.length === 0 && (
+            <p className="mt-1 text-xs text-muted">Buat milestone terlebih dahulu di halaman Milestones</p>
+          )}
         </div>
 
         <div>
-          <label htmlFor="task-time" className={labelClass}>{t('task.timeSpent')}</label>
+          <label htmlFor="task-time" className={labelClass}>
+            {t('task.timeSpent')}
+            <span className="ml-1 text-xs font-normal text-muted">(estimasi menit)</span>
+          </label>
           <input
             id="task-time"
             type="number"
@@ -230,6 +289,9 @@ export function TaskForm({ initialData, submitLabel, onSubmit, onCancel }: TaskF
             placeholder="0"
             className={inputClass(false)}
           />
+          <p className="mt-1 text-xs text-muted">
+            Estimasi waktu pengerjaan. Jika melebihi deadline, task akan ditandai overdue.
+          </p>
         </div>
       </div>
 

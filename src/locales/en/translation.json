@@ -13,7 +13,8 @@
     "ariaLabel": "Main navigation",
     "projects": "Projects",
     "more": "More",
-    "allMenu": "All Menu"
+    "allMenu": "All Menu",
+    "milestones": "Milestones"
   },
   "common": {
     "all": "All",
@@ -24,7 +25,10 @@
     "search": "Search",
     "select": "Select",
     "delete": "Delete",
-    "viewAll": "View All"
+    "viewAll": "View All",
+    "total": "Total",
+    "edit": "Edit",
+    "detail": "Detail"
   },
   "auth": {
     "title": "Business Task Manager",
@@ -78,6 +82,7 @@
     "inProgress": "In Progress",
     "waiting": "Waiting",
     "overdue": "Overdue",
+    "overdueCount": "Overdue",
     "markComplete": "Mark as complete",
     "markPending": "Mark as pending",
     "clearCompleted": "Clear Completed",
@@ -98,7 +103,12 @@
     "timeSpent": "Time (minutes)",
     "attachment": "Attachment (URL)",
     "attachmentPlaceholder": "https://...",
-    "repeat": { "label": "Repeat", "none": "No repeat", "daily": "Daily", "weekly": "Weekly", "monthly": "Monthly" }
+    "repeat": { "label": "Repeat", "none": "No repeat", "daily": "Daily", "weekly": "Weekly", "monthly": "Monthly" },
+    "unassigned": "Unassigned",
+    "notYourTask": "Not your task",
+    "showAll": "All Tasks",
+    "myOnly": "My Tasks Only",
+    "count": "Showing {{count}} tasks"
   },
   "tasksPage": {
     "subtitle": "Showing {{count}} tasks",
@@ -108,6 +118,12 @@
   },
   "priority": { "low": "Low", "medium": "Medium", "high": "High", "urgent": "Urgent" },
   "category": { "work": "Work", "study": "Study", "personal": "Personal", "shopping": "Shopping", "other": "Other" },
+  "status": {
+    "completed": "Completed",
+    "pending": "Pending",
+    "inProgress": "In Progress",
+    "waiting": "Waiting"
+  },
   "approval": {
     "none": "",
     "pending": "Pending Approval",
@@ -116,11 +132,24 @@
     "submit": "Submit for Approval",
     "approve": "Approve",
     "reject": "Reject",
-    "reset": "Reset Approval"
+    "reset": "Reset Approval",
+    "notRequired": "This task is managed by Admin/Manager — approval not required"
   },
   "checklist": { "title": "Checklist", "addPlaceholder": "Add checklist item...", "check": "Mark as done", "uncheck": "Unmark as done", "remove": "Remove item", "progress": "{{done}}/{{total}} completed" },
   "comment": { "title": "Comments", "placeholder": "Write a comment...", "empty": "No comments yet.", "delete": "Delete comment" },
-  "filter": { "status": "Status", "priority": "Priority", "category": "Category", "sort": "Sort", "sortNewest": "Newest", "sortOldest": "Oldest", "sortDueDate": "Due Date", "sortPriority": "Priority" },
+  "filter": {
+    "status": "Status",
+    "priority": "Priority",
+    "category": "Category",
+    "sort": "Sort",
+    "sortNewest": "Newest",
+    "sortOldest": "Oldest",
+    "sortDueDate": "Due Date",
+    "sortPriority": "Priority",
+    "allStatus": "All Status",
+    "allPriority": "All Priority",
+    "allCategory": "All Category"
+  },
   "categories": { "title": "Categories", "subtitle": "Browse and manage tasks by category.", "tasksCount": "{{count}} tasks", "pendingCount": "{{count}} pending" },
   "kanban": { "title": "Kanban Board", "subtitle": "Visualize tasks by status.", "emptyColumn": "No tasks" },
   "calendar": { "today": "Today" },
@@ -137,6 +166,37 @@
     "empty": "No team members yet."
   },
   "activity": { "title": "Activity Log", "subtitle": "Application activity history.", "empty": "No activity yet.", "clear": "Clear Log" },
+  "milestone": {
+    "title": "Milestones",
+    "subtitle": "Manage project milestones and track progress.",
+    "add": "Add Milestone",
+    "edit": "Edit Milestone",
+    "name": "Milestone Name",
+    "namePlaceholder": "e.g. Phase 1 - Design",
+    "project": "Project",
+    "noProject": "No Project",
+    "dueDate": "Deadline",
+    "status": "Status",
+    "statusPending": "Pending",
+    "statusInProgress": "In Progress",
+    "statusCompleted": "Completed",
+    "description": "Description",
+    "descriptionPlaceholder": "Milestone description (optional)",
+    "empty": "No milestones yet",
+    "emptyDescription": "Create your first milestone to set project targets.",
+    "progressTask": "Task Progress",
+    "deleteConfirmTitle": "Delete Milestone",
+    "deleteConfirmMessage": "Are you sure you want to delete milestone \"{{name}}\"?",
+    "backToList": "Back to Milestones",
+    "notFound": "Milestone not found",
+    "notFoundDescription": "This milestone may have been deleted.",
+    "deadline": "Deadline",
+    "overallProgress": "Overall Progress",
+    "tasksInMilestone": "Tasks in Milestone ({{count}})",
+    "noTasks": "No tasks yet",
+    "noTasksDescription": "Add a task and select this milestone to link it.",
+    "others": "more"
+  },
   "project": {
     "add": "Add Project",
     "edit": "Edit Project",
@@ -151,7 +211,26 @@
     "noProjects": "No projects yet",
     "noProjectsDescription": "Create your first project to organize tasks.",
     "deleteConfirmTitle": "Delete this project?",
-    "deleteConfirmMessage": "Project \"{{name}}\" will be deleted. Associated tasks will not be deleted."
+    "deleteConfirmMessage": "Project \"{{name}}\" will be deleted. Associated tasks will not be deleted.",
+    "milestones": "Milestones",
+    "members": "members",
+    "backToList": "Back to Projects",
+    "notFoundOrNoAccess": "Project not found or you don't have access",
+    "noAccessDescription": "Contact Admin or Manager to get access to this project.",
+    "createdDate": "Created",
+    "overallProgress": "Overall Progress",
+    "teamMembers": "Team Members ({{count}})",
+    "invite": "Invite",
+    "noMembers": "No team members yet.",
+    "removeFromProject": "Remove from project",
+    "noMilestones": "No milestones for this project yet.",
+    "recentTasks": "Recent Tasks ({{shown}} of {{total}})",
+    "noTasks": "No tasks in this project yet.",
+    "inviteTitle": "Invite Members to Project",
+    "noUsersAvailable": "No users available.",
+    "alreadyMember": "Already a member",
+    "autoMember": "Auto member",
+    "inviteAction": "Invite ({{count}})"
   },
   "settings": {
     "title": "Settings",

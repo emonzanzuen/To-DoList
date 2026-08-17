@@ -179,7 +179,7 @@ export function TaskCard({ task, onToggle, onTogglePin, onEdit, onDelete, onView
             <Star className="h-4 w-4" aria-hidden="true" fill={task.isPinned ? 'currentColor' : 'none'} />
           </button>
 
-          {canEditTask(task.assigneeId) && (
+          {task.assigneeIds.some((id) => canEditTask(id)) && (
             <button
               type="button"
               onClick={() => onEdit(task)}

@@ -4,9 +4,10 @@ export interface Project {
   id: string;
   name: string;
   description: string;
-  milestone: string | null; // yyyy-mm-dd
+  milestone: string | null;
   status: ProjectStatus;
-  createdBy: string; // userId
+  memberIds: string[];
+  createdBy: string;
   createdAt: string;
   updatedAt: string;
 }

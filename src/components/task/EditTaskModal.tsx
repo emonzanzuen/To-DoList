@@ -15,36 +15,36 @@ export function EditTaskModal({ task, onClose }: EditTaskModalProps) {
   const { updateTask } = useTasks();
   const { showToast } = useToast();
 
+  if (!task) return null;
+
   const handleSubmit = (data: TaskFormData) => {
-    if (!task) return;
     updateTask(task.id, data);
     showToast(t('toast.taskUpdated'), 'success');
     onClose();
   };
 
+  const initialData: TaskFormData = {
+    title: task.title,
+    description: task.description,
+    priority: task.priority,
+    category: task.category,
+    projectId: task.projectId ?? '',
+    assigneeIds: task.assigneeIds ?? [],
+    milestone: task.milestone ?? '',
+    dueDate: task.dueDate ?? '',
+    repeat: task.repeat,
+    attachmentUrl: task.attachmentUrl ?? '',
+    timeSpentMinutes: task.timeSpentMinutes,
+  };
+
   return (
-    <Modal open={task !== null} onClose={onClose} title={t('task.edit')}>
-      {task && (
-        <TaskForm
-          key={task.id}
-          initialData={{
-            title: task.title,
-            description: task.description,
-            priority: task.priority,
-            category: task.category,
-            dueDate: task.dueDate ?? '',
-            repeat: task.repeat,
-            projectId: task.projectId ?? '',       // ← BARU
-            assigneeId: task.assigneeId ?? '',     // ← BARU
-            milestone: task.milestone ?? '',       // ← BARU
-            attachmentUrl: task.attachmentUrl ?? '',// ← BARU
-            timeSpentMinutes: task.timeSpentMinutes ?? 0, // ← BARU
-          }}
-          submitLabel={t('common.save')}
-          onSubmit={handleSubmit}
-          onCancel={onClose}
-        />
-      )}
+    <Modal open={!!task} onClose={onClose} title={t('task.edit')}>
+      <TaskForm
+        initialData={initialData}
+        submitLabel={t('common.save')}
+        onSubmit={handleSubmit}
+        onCancel={onClose}
+      />
     </Modal>
   );
 }

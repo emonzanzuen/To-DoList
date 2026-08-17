@@ -18,7 +18,7 @@ interface TaskDetailModalProps {
 
 export function TaskDetailModal({ task, onClose }: TaskDetailModalProps) {
   const { t, i18n } = useTranslation();
-  const { user, canApprove } = useAuth();
+  const { user, users, canApprove } = useAuth();
   const { updateChecklist, updateComments, updateApproval } = useTasks();
 
   // Local state untuk real-time update tanpa perlu tutup modal
@@ -38,6 +38,15 @@ export function TaskDetailModal({ task, onClose }: TaskDetailModalProps) {
   }, [task]);
 
   if (!task || !user) return null;
+
+  // Cek apakah semua assignee adalah Admin/Manager → tidak perlu approval
+  const allAssigneesAreAdminOrManager = task.assigneeIds.length > 0 && task.assigneeIds.every((aid) => {
+    const assignee = users.find((u) => u.id === aid);
+    return assignee?.role === 'admin' || assignee?.role === 'manager';
+  });
+
+  // Task tanpa assignee juga tidak perlu approval
+  const needsApproval = !allAssigneesAreAdminOrManager && task.assigneeIds.length > 0;
 
   // === CHECKLIST HANDLERS (real-time) ===
   const addChecklistItem = () => {
@@ -141,38 +150,48 @@ export function TaskDetailModal({ task, onClose }: TaskDetailModalProps) {
           )}
         </div>
 
-        {/* Approval Section */}
-        <div className="rounded-xl border border-line bg-background p-3 space-y-2">
-          <h3 className="text-sm font-semibold text-ink flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4" /> Approval
-          </h3>
-          <div className="flex items-center gap-2">
-            {approvalBadge[approvalStatus]}
-            {approvalStatus === 'none' && (
-              <span className="text-xs text-muted">Belum diajukan</span>
-            )}
+        {/* Approval Section — hanya tampil jika task memerlukan approval */}
+        {needsApproval ? (
+          <div className="rounded-xl border border-line bg-background p-3 space-y-2">
+            <h3 className="text-sm font-semibold text-ink flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4" /> Approval
+            </h3>
+            <div className="flex items-center gap-2">
+              {approvalBadge[approvalStatus]}
+              {approvalStatus === 'none' && (
+                <span className="text-xs text-muted">Belum diajukan</span>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {approvalStatus === 'none' && !canApprove && (
+                <Button size="sm" variant="secondary" onClick={submitForApproval}>{t('approval.submit')}</Button>
+              )}
+              {approvalStatus === 'none' && canApprove && (
+                <span className="text-xs text-muted italic">Menunggu pengajuan dari anggota tim</span>
+              )}
+              {approvalStatus === 'pending' && canApprove && (
+                <>
+                  <Button size="sm" onClick={approveTask}>{t('approval.approve')}</Button>
+                  <Button size="sm" variant="danger" onClick={rejectTask}>{t('approval.reject')}</Button>
+                </>
+              )}
+              {approvalStatus === 'pending' && !canApprove && (
+                <span className="text-xs text-muted italic">Menunggu persetujuan Manager/Admin</span>
+              )}
+              {approvalStatus !== 'none' && canApprove && (
+                <Button size="sm" variant="secondary" onClick={resetApproval}>{t('approval.reset')}</Button>
+              )}
+            </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {approvalStatus === 'none' && !canApprove && (
-              <Button size="sm" variant="secondary" onClick={submitForApproval}>{t('approval.submit')}</Button>
-            )}
-            {approvalStatus === 'none' && canApprove && (
-              <span className="text-xs text-muted italic">Menunggu pengajuan dari anggota tim</span>
-            )}
-            {approvalStatus === 'pending' && canApprove && (
-              <>
-                <Button size="sm" onClick={approveTask}>{t('approval.approve')}</Button>
-                <Button size="sm" variant="danger" onClick={rejectTask}>{t('approval.reject')}</Button>
-              </>
-            )}
-            {approvalStatus === 'pending' && !canApprove && (
-              <span className="text-xs text-muted italic">Menunggu persetujuan Manager/Admin</span>
-            )}
-            {approvalStatus !== 'none' && canApprove && (
-              <Button size="sm" variant="secondary" onClick={resetApproval}>{t('approval.reset')}</Button>
-            )}
+        ) : (
+          /* Task oleh Admin/Manager — tidak perlu approval */
+          <div className="rounded-xl border border-line bg-background p-3">
+            <div className="flex items-center gap-2 text-xs text-muted">
+              <ShieldCheck className="h-4 w-4 text-success" />
+              <span>Task ini dikelola oleh Admin/Manager — approval tidak diperlukan</span>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Checklist Section */}
         <div className="rounded-xl border border-line bg-background p-3 space-y-2">

@@ -11,10 +11,16 @@ import { readStorage, writeStorage } from '../../utils/storage';
 import { generateId } from '../../utils/taskUtils';
 
 const USERS_KEY = 'app_users_custom';
+const USER_OVERRIDES_KEY = 'app_user_overrides';
 
 function loadCustomUsers(): User[] {
   const data = readStorage<unknown>(USERS_KEY, []);
   return Array.isArray(data) ? (data as User[]) : [];
+}
+
+function loadUserOverrides(): Record<string, Partial<User>> {
+  const data = readStorage<unknown>(USER_OVERRIDES_KEY, {});
+  return typeof data === 'object' && data !== null ? (data as Record<string, Partial<User>>) : {};
 }
 
 export default function TeamManagement() {
@@ -23,29 +29,61 @@ export default function TeamManagement() {
   const entranceRef = usePageEntrance();
 
   const [customUsers, setCustomUsers] = useState<User[]>(() => loadCustomUsers());
+  const [overrides, setOverrides] = useState<Record<string, Partial<User>>>(() => loadUserOverrides());
   const [showForm, setShowForm] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [form, setForm] = useState({ name: '', email: '', role: 'member' as UserRole, team: '' });
 
-  const allUsers = [...baseUsers, ...customUsers];
+  // Terapkan overrides ke baseUsers
+  const allUsers = [
+    ...baseUsers.map((u) => {
+      const override = overrides[u.id];
+      return override ? { ...u, ...override } : u;
+    }),
+    ...customUsers,
+  ];
 
   const saveCustomUsers = (updated: User[]) => {
     setCustomUsers(updated);
     writeStorage(USERS_KEY, updated);
   };
 
+  const saveOverrides = (updated: Record<string, Partial<User>>) => {
+    setOverrides(updated);
+    writeStorage(USER_OVERRIDES_KEY, updated);
+  };
+
   const handleSubmit = () => {
     if (!form.name.trim() || !form.email.trim()) return;
 
     if (editingUser) {
-      const updated = customUsers.map((u) =>
-        u.id === editingUser.id
-          ? { ...u, name: form.name.trim(), email: form.email.trim(), role: form.role, team: form.team.trim() }
-          : u,
-      );
-      saveCustomUsers(updated);
+      const isCustom = customUsers.some((cu) => cu.id === editingUser.id);
+
+      if (isCustom) {
+        // Edit user custom → update langsung di array customUsers
+        const updated = customUsers.map((u) =>
+          u.id === editingUser.id
+            ? { ...u, name: form.name.trim(), email: form.email.trim(), role: form.role, team: form.team.trim() }
+            : u,
+        );
+        saveCustomUsers(updated);
+      } else {
+        // Edit user bawaan → simpan sebagai override
+        const updatedOverrides = {
+          ...overrides,
+          [editingUser.id]: {
+            name: form.name.trim(),
+            email: form.email.trim(),
+            role: form.role,
+            team: form.team.trim(),
+          },
+        };
+        saveOverrides(updatedOverrides);
+      }
+
       setEditingUser(null);
     } else {
+      // Tambah user baru
       const newUser: User = {
         id: generateId(),
         name: form.name.trim(),
@@ -63,7 +101,7 @@ export default function TeamManagement() {
   };
 
   const handleEdit = (u: User) => {
-    setForm({ name: u.name, email: u.email, role: u.role, team: u.team });
+    setForm({ name: u.name, email: u.email, role: u.role, team: u.team ?? '' });
     setEditingUser(u);
     setShowForm(true);
   };
@@ -88,7 +126,6 @@ export default function TeamManagement() {
           <h1 className="text-2xl font-bold text-ink">{t('team.title')}</h1>
           <p className="mt-1 text-sm text-muted">{t('team.subtitle')}</p>
         </div>
-        {/* Tombol Tambah User HANYA untuk Admin */}
         {canManageTeam && (
           <Button
             size="sm"
@@ -104,7 +141,7 @@ export default function TeamManagement() {
         )}
       </div>
 
-      {/* Add/Edit Form — HANYA untuk Admin */}
+      {/* Add/Edit Form */}
       {showForm && canManageTeam && (
         <div data-animate className="space-y-4 rounded-2xl border border-line bg-surface p-5">
           <h2 className="text-sm font-semibold text-ink">
@@ -177,8 +214,11 @@ export default function TeamManagement() {
                 .slice(0, 2)
                 .toUpperCase();
               const isSelf = currentUser?.id === u.id;
-              // FIX: Edit/Hapus HANYA untuk Admin DAN hanya user custom
-              const canModify = canManageTeam && isCustom;
+
+              // Admin bisa edit SEMUA user, tapi hanya bisa hapus user custom
+              const canEdit = canManageTeam;
+              const canDelete = canManageTeam && isCustom;
+
               return (
                 <div key={u.id} className="flex items-center gap-3 rounded-2xl border border-line bg-surface p-4">
                   <div
@@ -197,21 +237,26 @@ export default function TeamManagement() {
                       <span className="text-[10px] text-muted">{u.team}</span>
                     </div>
                   </div>
-                  {/* Tombol Edit/Hapus HANYA jika Admin + user custom */}
-                  {canModify && (
+                  {(canEdit || canDelete) && (
                     <div className="flex shrink-0 items-center gap-1">
-                      <button
-                        onClick={() => handleEdit(u)}
-                        className="rounded-lg p-1.5 text-muted hover:bg-background hover:text-ink"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(u.id)}
-                        className="rounded-lg p-1.5 text-muted hover:bg-danger/10 hover:text-danger"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+                      {canEdit && (
+                        <button
+                          onClick={() => handleEdit(u)}
+                          className="rounded-lg p-1.5 text-muted hover:bg-background hover:text-ink"
+                          title="Edit user"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                      {canDelete && (
+                        <button
+                          onClick={() => handleDelete(u.id)}
+                          className="rounded-lg p-1.5 text-muted hover:bg-danger/10 hover:text-danger"
+                          title="Hapus user"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>

@@ -32,8 +32,19 @@ interface TaskContextValue {
 
 const TaskContext = createContext<TaskContextValue | null>(null);
 
+function normalizeAssignees(task: Record<string, unknown>): string[] {
+  if (Array.isArray(task.assigneeIds)) return task.assigneeIds as string[];
+  if (typeof task.assigneeId === 'string' && task.assigneeId) return [task.assigneeId as string];
+  return [];
+}
+
 export function TaskProvider({ children }: { children: ReactNode }) {
-  const [tasks, setTasks] = useState<Task[]>(() => loadTasks());
+  const [tasks, setTasks] = useState<Task[]>(() =>
+    loadTasks().map((t) => ({
+      ...t,
+      assigneeIds: normalizeAssignees(t as unknown as Record<string, unknown>),
+    })),
+  );
   const { logActivity } = useActivity();
 
   useEffect(() => {
@@ -52,7 +63,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
         priority: data.priority,
         category: data.category,
         projectId: data.projectId || null,
-        assigneeId: data.assigneeId || currentUserId || null,
+        assigneeIds: data.assigneeIds.length > 0 ? data.assigneeIds : (currentUserId ? [currentUserId] : []),
         milestone: data.milestone || null,
         dueDate: data.dueDate || null,
         isPinned: false,
@@ -87,7 +98,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
                 priority: data.priority,
                 category: data.category,
                 projectId: data.projectId || null,
-                assigneeId: data.assigneeId || null,
+                assigneeIds: data.assigneeIds,
                 milestone: data.milestone || null,
                 dueDate: data.dueDate || null,
                 repeat: data.repeat,
@@ -112,7 +123,6 @@ export function TaskProvider({ children }: { children: ReactNode }) {
 
       const willComplete = task.status !== 'completed';
 
-      // Validasi availability untuk recurring task
       if (willComplete && task.repeat !== 'none' && !canCompleteNow(task)) {
         const availableDate = task.canCompleteFrom ?? task.dueDate ?? 'unknown';
         alert(`Task belum dapat diselesaikan.\n\nTask ini baru dapat diselesaikan mulai:\n${availableDate}`);
@@ -134,13 +144,10 @@ export function TaskProvider({ children }: { children: ReactNode }) {
           updatedAt: now,
         };
 
-        // Buat instance recurring berikutnya
         if (willComplete && currentTask.repeat !== 'none' && currentTask.dueDate) {
           const nextDue = getNextRepeatDate(currentTask.dueDate, currentTask.repeat);
 
           if (nextDue) {
-            // Cek duplicate menggunakan newTasks (bukan previous)
-            // Layer 1: recurringParentId
             const duplicateByParent = newTasks.some(
               (t) =>
                 t.recurringParentId === currentTask.id &&
@@ -148,7 +155,6 @@ export function TaskProvider({ children }: { children: ReactNode }) {
                 t.status !== 'completed',
             );
 
-            // Layer 2: title + dueDate + repeat (fallback)
             const duplicateByTitle = newTasks.some(
               (t) =>
                 t.id !== currentTask.id &&
@@ -167,7 +173,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
                 priority: currentTask.priority,
                 category: currentTask.category,
                 projectId: currentTask.projectId,
-                assigneeId: currentTask.assigneeId,
+                assigneeIds: currentTask.assigneeIds,
                 milestone: currentTask.milestone,
                 dueDate: nextDue,
                 isPinned: false,
@@ -191,7 +197,6 @@ export function TaskProvider({ children }: { children: ReactNode }) {
         return newTasks;
       });
 
-      // Logging DI LUAR setTasks
       logActivity('system', willComplete ? 'completed_task' : 'reopened_task', task.title);
       if (recurringInfo.created) {
         logActivity('system', 'created_recurring_task', recurringInfo.label);
@@ -213,7 +218,6 @@ export function TaskProvider({ children }: { children: ReactNode }) {
         ),
       );
 
-      // Logging DI LUAR setTasks
       logActivity('system', newPinned ? 'pinned_task' : 'unpinned_task', task.title);
     },
     [tasks, logActivity],
@@ -229,7 +233,6 @@ export function TaskProvider({ children }: { children: ReactNode }) {
 
       setTasks((previous) => previous.filter((t) => t.id !== id));
 
-      // Logging DI LUAR setTasks
       if (task) {
         logActivity('system', 'deleted_task', task.title);
       }
@@ -242,7 +245,6 @@ export function TaskProvider({ children }: { children: ReactNode }) {
 
     setTasks((previous) => previous.filter((task) => task.status !== 'completed'));
 
-    // Logging DI LUAR setTasks
     if (completedCount > 0) {
       logActivity('system', 'cleared_completed', `${completedCount} tasks`);
     }

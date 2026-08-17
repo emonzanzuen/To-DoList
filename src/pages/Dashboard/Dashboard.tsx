@@ -47,7 +47,7 @@ export default function Dashboard() {
   const pending = tasks.length - completed;
 
   const myTasks = useMemo(
-    () => user ? tasks.filter((t) => t.assigneeId === user.id) : [],
+    () => user ? tasks.filter((t) => t.assigneeIds.includes(user.id)) : [],
     [tasks, user],
   );
   const myPending = myTasks.filter((t) => t.status !== 'completed');

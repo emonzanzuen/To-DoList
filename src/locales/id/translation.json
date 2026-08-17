@@ -13,7 +13,8 @@
     "ariaLabel": "Navigasi utama",
     "projects": "Projects",
     "more": "Lainnya",
-    "allMenu": "Semua Menu"
+    "allMenu": "Semua Menu",
+    "milestones": "Milestones"
   },
   "common": {
     "all": "Semua",
@@ -24,7 +25,10 @@
     "search": "Cari",
     "select": "Pilih",
     "delete": "Hapus",
-    "viewAll": "Lihat Semua"
+    "viewAll": "Lihat Semua",
+    "total": "Total",
+    "edit": "Edit",
+    "detail": "Detail"
   },
   "auth": {
     "title": "Business Task Manager",
@@ -78,6 +82,7 @@
     "inProgress": "Sedang Dikerjakan",
     "waiting": "Menunggu",
     "overdue": "Terlambat",
+    "overdueCount": "Telat",
     "markComplete": "Tandai selesai",
     "markPending": "Batalkan selesai",
     "clearCompleted": "Hapus yang Selesai",
@@ -104,7 +109,12 @@
       "daily": "Setiap hari",
       "weekly": "Setiap minggu",
       "monthly": "Setiap bulan"
-    }
+    },
+    "unassigned": "Belum ditugaskan",
+    "notYourTask": "Bukan task Anda",
+    "showAll": "Semua Task",
+    "myOnly": "Task Saya Saja",
+    "count": "Menampilkan {{count}} task"
   },
   "tasksPage": {
     "subtitle": "Menampilkan {{count}} task",
@@ -114,6 +124,12 @@
   },
   "priority": { "low": "Rendah", "medium": "Sedang", "high": "Tinggi", "urgent": "Urgent" },
   "category": { "work": "Kerja", "study": "Belajar", "personal": "Pribadi", "shopping": "Belanja", "other": "Lainnya" },
+  "status": {
+    "completed": "Selesai",
+    "pending": "Belum Selesai",
+    "inProgress": "Sedang Dikerjakan",
+    "waiting": "Menunggu"
+  },
   "approval": {
     "none": "",
     "pending": "Menunggu Approval",
@@ -122,7 +138,8 @@
     "submit": "Ajukan Approval",
     "approve": "Setujui",
     "reject": "Tolak",
-    "reset": "Reset Approval"
+    "reset": "Reset Approval",
+    "notRequired": "Task ini dikelola oleh Admin/Manager — approval tidak diperlukan"
   },
   "checklist": {
     "title": "Checklist",
@@ -141,7 +158,10 @@
     "sortNewest": "Terbaru",
     "sortOldest": "Terlama",
     "sortDueDate": "Tenggat Waktu",
-    "sortPriority": "Prioritas"
+    "sortPriority": "Prioritas",
+    "allStatus": "Semua Status",
+    "allPriority": "Semua Prioritas",
+    "allCategory": "Semua Kategori"
   },
   "categories": { "title": "Kategori", "subtitle": "Lihat dan kelola task berdasarkan kategori.", "tasksCount": "{{count}} task", "pendingCount": "{{count}} belum selesai" },
   "kanban": { "title": "Kanban Board", "subtitle": "Visualisasi task berdasarkan status.", "emptyColumn": "Tidak ada task" },
@@ -159,6 +179,37 @@
     "empty": "Belum ada anggota tim."
   },
   "activity": { "title": "Activity Log", "subtitle": "Riwayat aktivitas dalam aplikasi.", "empty": "Belum ada aktivitas.", "clear": "Hapus Log" },
+  "milestone": {
+    "title": "Milestones",
+    "subtitle": "Kelola milestone project dan pantau progressnya.",
+    "add": "Tambah Milestone",
+    "edit": "Edit Milestone",
+    "name": "Nama Milestone",
+    "namePlaceholder": "Contoh: Phase 1 - Design",
+    "project": "Project",
+    "noProject": "Tanpa Project",
+    "dueDate": "Deadline",
+    "status": "Status",
+    "statusPending": "Pending",
+    "statusInProgress": "In Progress",
+    "statusCompleted": "Completed",
+    "description": "Deskripsi",
+    "descriptionPlaceholder": "Deskripsi milestone (opsional)",
+    "empty": "Belum ada milestone",
+    "emptyDescription": "Buat milestone pertama untuk mengatur target project Anda.",
+    "progressTask": "Progress Task",
+    "deleteConfirmTitle": "Hapus Milestone",
+    "deleteConfirmMessage": "Apakah Anda yakin ingin menghapus milestone \"{{name}}\"?",
+    "backToList": "Kembali ke Milestones",
+    "notFound": "Milestone tidak ditemukan",
+    "notFoundDescription": "Milestone ini mungkin sudah dihapus.",
+    "deadline": "Deadline",
+    "overallProgress": "Progress Keseluruhan",
+    "tasksInMilestone": "Tasks dalam Milestone ({{count}})",
+    "noTasks": "Belum ada task",
+    "noTasksDescription": "Tambahkan task dan pilih milestone ini untuk menghubungkannya.",
+    "others": "lainnya"
+  },
   "project": {
     "add": "Tambah Project",
     "edit": "Edit Project",
@@ -173,7 +224,26 @@
     "noProjects": "Belum ada project",
     "noProjectsDescription": "Buat project pertama untuk mengorganisir task.",
     "deleteConfirmTitle": "Hapus project ini?",
-    "deleteConfirmMessage": "Project \"{{name}}\" akan dihapus. Task yang terkait tidak akan dihapus."
+    "deleteConfirmMessage": "Project \"{{name}}\" akan dihapus. Task yang terkait tidak akan dihapus.",
+    "milestones": "Milestones",
+    "members": "anggota",
+    "backToList": "Kembali ke Projects",
+    "notFoundOrNoAccess": "Project tidak ditemukan atau Anda tidak memiliki akses",
+    "noAccessDescription": "Hubungi Admin atau Manager untuk mendapatkan akses ke project ini.",
+    "createdDate": "Dibuat",
+    "overallProgress": "Progress Keseluruhan",
+    "teamMembers": "Anggota Tim ({{count}})",
+    "invite": "Invite",
+    "noMembers": "Belum ada anggota tim.",
+    "removeFromProject": "Hapus dari project",
+    "noMilestones": "Belum ada milestone untuk project ini.",
+    "recentTasks": "Tasks Terbaru ({{shown}} dari {{total}})",
+    "noTasks": "Belum ada task dalam project ini.",
+    "inviteTitle": "Invite Anggota ke Project",
+    "noUsersAvailable": "Tidak ada user tersedia.",
+    "alreadyMember": "Sudah anggota",
+    "autoMember": "Otomatis anggota",
+    "inviteAction": "Invite ({{count}})"
   },
   "settings": {
     "title": "Pengaturan",

@@ -1,67 +1,65 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../../context/AuthContext';
+import { useTasks } from '../../context/TaskContext';
 import type { Task } from '../../types/task';
-import { MOCK_USERS } from '../../types/user';
 
 interface TeamWorkloadProps {
-  tasks: Task[];
-  title: string;
+  tasks?: Task[];
+  title?: string;
 }
 
-export function TeamWorkload({ tasks, title }: TeamWorkloadProps) {
+export function TeamWorkload({ tasks: propTasks, title }: TeamWorkloadProps) {
   const { t } = useTranslation();
+  const { users } = useAuth();
+  const { tasks: contextTasks } = useTasks();
+  const tasks = propTasks ?? contextTasks;
 
-  const workload = useMemo(() => {
+  const workloadData = useMemo(() => {
     const map: Record<string, { name: string; total: number; completed: number }> = {};
 
-    MOCK_USERS.forEach((u: { id: string; name: string }) => {
-      map[u.id] = { name: u.name, total: 0, completed: 0 };
-    });
+    for (const user of users) {
+      map[user.id] = { name: user.name, total: 0, completed: 0 };
+    }
 
-    tasks.forEach((task) => {
-      if (task.assigneeId && map[task.assigneeId]) {
-        map[task.assigneeId].total++;
-        if (task.status === 'completed') map[task.assigneeId].completed++;
+    for (const task of tasks) {
+      for (const assigneeId of task.assigneeIds) {
+        if (map[assigneeId]) {
+          map[assigneeId].total++;
+          if (task.status === 'completed') map[assigneeId].completed++;
+        }
       }
-    });
+    }
 
-    return Object.values(map)
-      .filter((w) => w.total > 0)
-      .sort((a, b) => b.total - a.total);
-  }, [tasks]);
+    return Object.values(map).filter((d) => d.total > 0);
+  }, [tasks, users]);
 
-  const maxTasks = Math.max(...workload.map((w) => w.total), 1);
+  if (workloadData.length === 0) return null;
 
-  if (workload.length === 0) {
-    return (
-      <div className="rounded-2xl border border-line bg-surface p-5">
-        <h3 className="mb-2 text-sm font-semibold text-ink">{title}</h3>
-        <p className="text-xs text-muted">{t('dashboard.noWorkload')}</p>
-      </div>
-    );
-  }
+  const maxTotal = Math.max(...workloadData.map((d) => d.total), 1);
 
   return (
     <div className="rounded-2xl border border-line bg-surface p-5">
-      <h3 className="mb-4 text-sm font-semibold text-ink">{title}</h3>
+      <h3 className="mb-4 text-sm font-semibold text-ink">
+        {title ?? t('dashboard.teamWorkload')}
+      </h3>
       <div className="space-y-3">
-        {workload.map((w) => {
-          const pct = Math.round((w.total / maxTasks) * 100);
-          const completedPct = w.total > 0 ? Math.round((w.completed / w.total) * 100) : 0;
-          return (
-            <div key={w.name}>
-              <div className="mb-1 flex items-center justify-between text-xs">
-                <span className="font-medium text-ink">{w.name}</span>
-                <span className="text-muted">{w.total} tasks ({completedPct}% done)</span>
-              </div>
-              <div className="h-2.5 w-full overflow-hidden rounded-full bg-line">
-                <div className="relative h-full rounded-full bg-primary" style={{ width: `${pct}%` }}>
-                  <div className="absolute inset-y-0 left-0 rounded-full bg-success" style={{ width: `${completedPct}%` }} />
-                </div>
-              </div>
+        {workloadData.map((d) => (
+          <div key={d.name} className="space-y-1">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-medium text-ink">{d.name}</span>
+              <span className="text-muted">
+                {d.completed}/{d.total}
+              </span>
             </div>
-          );
-        })}
+            <div className="h-2 w-full overflow-hidden rounded-full bg-line">
+              <div
+                className="h-full rounded-full bg-primary transition-all"
+                style={{ width: `${(d.total / maxTotal) * 100}%` }}
+              />
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

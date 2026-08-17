@@ -26,7 +26,7 @@ export interface Task {
   priority: TaskPriority;
   category: TaskCategory;
   projectId: string | null;
-  assigneeId: string | null;
+  assigneeIds: string[];
   milestone: string | null;
   dueDate: string | null;
   isPinned: boolean;
@@ -49,7 +49,7 @@ export interface TaskFormData {
   priority: TaskPriority;
   category: TaskCategory;
   projectId: string;
-  assigneeId: string;
+  assigneeIds: string[];
   milestone: string;
   dueDate: string;
   repeat: RepeatInterval;

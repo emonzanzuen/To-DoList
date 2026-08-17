@@ -16,10 +16,13 @@ const PROJECTS_STORAGE_KEY = 'app_projects';
 
 interface ProjectContextValue {
   projects: Project[];
-  addProject: (name: string, description: string, milestone: string) => void;
+  addProject: (name: string, description: string, milestone: string, creatorId: string) => void;
   updateProject: (id: string, name: string, description: string, milestone: string, status: Project['status']) => void;
   deleteProject: (id: string) => void;
   getProjectById: (id: string) => Project | undefined;
+  inviteMember: (projectId: string, userId: string) => void;
+  removeMember: (projectId: string, userId: string) => void;
+  isMember: (projectId: string, userId: string) => boolean;
 }
 
 const ProjectContext = createContext<ProjectContextValue | null>(null);
@@ -27,13 +30,25 @@ const ProjectContext = createContext<ProjectContextValue | null>(null);
 function loadProjects(): Project[] {
   const data = readStorage<unknown>(PROJECTS_STORAGE_KEY, []);
   if (!Array.isArray(data)) return [];
-  return data.filter(
-    (item): item is Project =>
-      typeof item === 'object' &&
-      item !== null &&
-      typeof (item as Record<string, unknown>).id === 'string' &&
-      typeof (item as Record<string, unknown>).name === 'string',
-  ) as Project[];
+  return data
+    .filter(
+      (item): item is Record<string, unknown> =>
+        typeof item === 'object' &&
+        item !== null &&
+        typeof item.id === 'string' &&
+        typeof item.name === 'string',
+    )
+    .map((item) => ({
+      id: String(item.id),
+      name: String(item.name),
+      description: String(item.description ?? ''),
+      milestone: (item.milestone as string | null) ?? null,
+      status: (item.status as Project['status']) ?? 'active',
+      memberIds: Array.isArray(item.memberIds) ? (item.memberIds as string[]) : [],
+      createdBy: String(item.createdBy ?? ''),
+      createdAt: String(item.createdAt ?? new Date().toISOString()),
+      updatedAt: String(item.updatedAt ?? new Date().toISOString()),
+    })) as Project[];
 }
 
 export function ProjectProvider({ children }: { children: ReactNode }) {
@@ -43,20 +58,24 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     writeStorage(PROJECTS_STORAGE_KEY, projects);
   }, [projects]);
 
-  const addProject = useCallback((name: string, description: string, milestone: string) => {
-    const now = nowISO();
-    const project: Project = {
-      id: generateId(),
-      name: name.trim(),
-      description: description.trim(),
-      milestone: milestone || null,
-      status: 'active',
-      createdBy: '', // akan diisi oleh AuthContext di fase berikutnya
-      createdAt: now,
-      updatedAt: now,
-    };
-    setProjects((prev) => [...prev, project]);
-  }, []);
+  const addProject = useCallback(
+    (name: string, description: string, milestone: string, creatorId: string) => {
+      const now = nowISO();
+      const project: Project = {
+        id: generateId(),
+        name: name.trim(),
+        description: description.trim(),
+        milestone: milestone || null,
+        status: 'active',
+        memberIds: creatorId ? [creatorId] : [],
+        createdBy: creatorId,
+        createdAt: now,
+        updatedAt: now,
+      };
+      setProjects((prev) => [...prev, project]);
+    },
+    [],
+  );
 
   const updateProject = useCallback(
     (id: string, name: string, description: string, milestone: string, status: Project['status']) => {
@@ -87,9 +106,46 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     [projects],
   );
 
+  const inviteMember = useCallback((projectId: string, userId: string) => {
+    setProjects((prev) =>
+      prev.map((p) =>
+        p.id === projectId && !p.memberIds.includes(userId)
+          ? { ...p, memberIds: [...p.memberIds, userId], updatedAt: nowISO() }
+          : p,
+      ),
+    );
+  }, []);
+
+  const removeMember = useCallback((projectId: string, userId: string) => {
+    setProjects((prev) =>
+      prev.map((p) =>
+        p.id === projectId
+          ? { ...p, memberIds: p.memberIds.filter((id) => id !== userId), updatedAt: nowISO() }
+          : p,
+      ),
+    );
+  }, []);
+
+  const isMember = useCallback(
+    (projectId: string, userId: string) => {
+      const project = projects.find((p) => p.id === projectId);
+      return project?.memberIds.includes(userId) ?? false;
+    },
+    [projects],
+  );
+
   const value = useMemo<ProjectContextValue>(
-    () => ({ projects, addProject, updateProject, deleteProject, getProjectById }),
-    [projects, addProject, updateProject, deleteProject, getProjectById],
+    () => ({
+      projects,
+      addProject,
+      updateProject,
+      deleteProject,
+      getProjectById,
+      inviteMember,
+      removeMember,
+      isMember,
+    }),
+    [projects, addProject, updateProject, deleteProject, getProjectById, inviteMember, removeMember, isMember],
   );
 
   return <ProjectContext.Provider value={value}>{children}</ProjectContext.Provider>;
