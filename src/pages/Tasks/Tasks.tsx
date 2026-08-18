@@ -16,7 +16,7 @@ import type { Task, TaskFiltersState, StatusFilter, PriorityFilter, CategoryFilt
 
 export default function Tasks() {
   const { t } = useTranslation();
-  const { tasks, toggleTask, togglePin, clearCompleted } = useTasks();
+  const { tasks, toggleTask, togglePin, clearCompleted, reorderTasks } = useTasks();
   const { user, canSeeAllTasks, canDeleteTask } = useAuth();
   const entranceRef = usePageEntrance();
 
@@ -71,29 +71,38 @@ export default function Tasks() {
       filtered = filtered.filter((task) => task.category === filters.category);
     }
 
-    // Sort
-    switch (filters.sort) {
-      case 'oldest':
-        filtered.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
-        break;
-      case 'dueDate':
-        filtered.sort((a, b) => (a.dueDate ?? 'z').localeCompare(b.dueDate ?? 'z'));
-        break;
-      case 'priority': {
-        const order = { urgent: 0, high: 1, medium: 2, low: 3 };
-        filtered.sort((a, b) => order[a.priority] - order[b.priority]);
-        break;
+    // Sort — hanya apply jika bukan default view
+    // Default view (newest) mempertahankan urutan drag & drop
+    const isDefaultSort = filters.sort === 'newest';
+    if (!isDefaultSort) {
+      switch (filters.sort) {
+        case 'oldest':
+          filtered.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+          break;
+        case 'dueDate':
+          filtered.sort((a, b) => (a.dueDate ?? 'z').localeCompare(b.dueDate ?? 'z'));
+          break;
+        case 'priority': {
+          const order = { urgent: 0, high: 1, medium: 2, low: 3 };
+          filtered.sort((a, b) => order[a.priority] - order[b.priority]);
+          break;
+        }
       }
-      case 'newest':
-      default:
-        filtered.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-        break;
     }
 
     return filtered;
   }, [tasks, filters, user, canSeeAllTasks, showMyOnly]);
 
   const completedCount = tasks.filter((t) => t.status === 'completed').length;
+
+  // Drag & drop hanya aktif saat default view (tanpa filter/sort/search)
+  const isDefaultView =
+    filters.status === 'all' &&
+    filters.priority === 'all' &&
+    filters.category === 'all' &&
+    filters.sort === 'newest' &&
+    !filters.search.trim() &&
+    !showMyOnly;
 
   const selectClass =
     'rounded-lg border border-line bg-background px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40';
@@ -242,6 +251,7 @@ export default function Tasks() {
             onEdit={setEditingTask}
             onDelete={setDeletingTask}
             onViewDetail={setViewingTask}
+            onReorder={isDefaultView ? reorderTasks : undefined}
           />
         )}
       </div>
