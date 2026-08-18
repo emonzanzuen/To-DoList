@@ -1,4 +1,4 @@
-export type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'waiting';
+export type TaskStatus = 'pending' | 'in_progress' | 'waiting_approval' | 'completed';
 export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
 export type TaskCategory = 'work' | 'study' | 'personal' | 'shopping' | 'other';
 export type RepeatInterval = 'none' | 'daily' | 'weekly' | 'monthly';

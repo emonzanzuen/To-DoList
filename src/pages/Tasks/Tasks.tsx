@@ -16,7 +16,7 @@ import type { Task, TaskFiltersState, StatusFilter, PriorityFilter, CategoryFilt
 
 export default function Tasks() {
   const { t } = useTranslation();
-  const { tasks, toggleTask, togglePin, clearCompleted, reorderTasks } = useTasks();
+  const { tasks, toggleTask, togglePin, clearCompleted, reorderTasks, updateTaskStatus } = useTasks();
   const { user, canSeeAllTasks, canDeleteTask } = useAuth();
   const entranceRef = usePageEntrance();
 
@@ -157,8 +157,8 @@ export default function Tasks() {
             <option value="all">{t('filter.allStatus')}</option>
             <option value="pending">{t('status.pending')}</option>
             <option value="in_progress">{t('status.inProgress')}</option>
+            <option value="waiting_approval">{t('status.waitingApproval')}</option>
             <option value="completed">{t('status.completed')}</option>
-            <option value="waiting">{t('status.waiting')}</option>
           </select>
 
           <select
@@ -252,6 +252,7 @@ export default function Tasks() {
             onDelete={setDeletingTask}
             onViewDetail={setViewingTask}
             onReorder={isDefaultView ? reorderTasks : undefined}
+            onUpdateStatus={updateTaskStatus}
           />
         )}
       </div>

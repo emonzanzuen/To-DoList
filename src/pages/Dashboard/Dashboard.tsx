@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { AlertTriangle, CheckCircle2, Clock, ListTodo, Plus, Star, TrendingUp } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Clock, ListTodo, Plus, ShieldAlert, Star, TrendingUp } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { ProgressBar } from '../../components/ui/ProgressBar';
@@ -23,7 +23,7 @@ import type { Task } from '../../types/task';
 
 export default function Dashboard() {
   const { t } = useTranslation();
-  const { tasks, toggleTask, togglePin } = useTasks();
+  const { tasks, toggleTask, togglePin, updateTaskStatus } = useTasks();
   const { user, isAdmin, isManager } = useAuth();
   const entranceRef = usePageEntrance();
 
@@ -35,7 +35,7 @@ export default function Dashboard() {
 
   const completed = useMemo(() => tasks.filter((t) => t.status === 'completed').length, [tasks]);
   const inProgress = useMemo(() => tasks.filter((t) => t.status === 'in_progress').length, [tasks]);
-  const waiting = useMemo(() => tasks.filter((t) => t.status === 'waiting').length, [tasks]);
+  const waitingApproval = useMemo(() => tasks.filter((t) => t.status === 'waiting_approval').length, [tasks]);
   const overdue = useMemo(
     () => tasks.filter((t) => {
       if (!t.dueDate || t.status === 'completed') return false;
@@ -59,7 +59,7 @@ export default function Dashboard() {
   }).length;
 
   const pendingApprovalTasks = useMemo(
-    () => tasks.filter((t) => t.approvalStatus === 'pending'),
+    () => tasks.filter((t) => t.status === 'waiting_approval'),
     [tasks],
   );
 
@@ -75,10 +75,10 @@ export default function Dashboard() {
   const statusChartData = useMemo(() => [
     { label: t('dashboard.completed'), value: completed, color: '#22c55e' },
     { label: t('dashboard.inProgress'), value: inProgress, color: '#0ea5e9' },
-    { label: t('dashboard.pending'), value: Math.max(0, pending - inProgress - waiting), color: '#94a3b8' },
-    { label: t('dashboard.waiting'), value: waiting, color: '#f59e0b' },
+    { label: t('dashboard.pending'), value: Math.max(0, pending - inProgress - waitingApproval), color: '#94a3b8' },
+    { label: t('dashboard.waitingApproval'), value: waitingApproval, color: '#f59e0b' },
     { label: t('dashboard.overdue'), value: overdue, color: '#ef4444' },
-  ], [completed, inProgress, pending, waiting, overdue, t]);
+  ], [completed, inProgress, pending, waitingApproval, overdue, t]);
 
   const priorityChartData = useMemo(() => [
     { label: t('priority.urgent'), value: tasks.filter((t) => t.priority === 'urgent').length, color: '#ef4444' },
@@ -144,10 +144,10 @@ export default function Dashboard() {
               }`}
             >
               <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-warning/10 text-warning">
-                <Clock className="h-5 w-5" />
+                <ShieldAlert className="h-5 w-5" />
               </div>
               <p className="text-2xl font-bold text-ink">{pendingApprovalTasks.length}</p>
-              <p className="mt-1 text-sm text-muted">{t('dashboard.waiting')}</p>
+              <p className="mt-1 text-sm text-muted">{t('dashboard.waitingApproval')}</p>
             </button>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -172,14 +172,14 @@ export default function Dashboard() {
         <section data-animate className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-ink">
-              Task Menunggu Approval ({pendingApprovalTasks.length})
+              {t('dashboard.pendingApprovalTitle', { count: pendingApprovalTasks.length })}
             </h2>
             <button
               type="button"
               onClick={() => setShowPendingApproval(false)}
               className="text-sm font-medium text-primary transition-colors hover:text-primary-hover"
             >
-              {t('common.close') || 'Tutup'}
+              {t('common.close')}
             </button>
           </div>
           <TaskList
@@ -189,6 +189,7 @@ export default function Dashboard() {
             onEdit={setEditingTask}
             onDelete={setDeletingTask}
             onViewDetail={setViewingTask}
+            onUpdateStatus={updateTaskStatus}
           />
         </section>
       )}
@@ -207,6 +208,7 @@ export default function Dashboard() {
             onEdit={setEditingTask}
             onDelete={setDeletingTask}
             onViewDetail={setViewingTask}
+            onUpdateStatus={updateTaskStatus}
           />
         </section>
       )}
@@ -225,6 +227,7 @@ export default function Dashboard() {
             onEdit={setEditingTask}
             onDelete={setDeletingTask}
             onViewDetail={setViewingTask}
+            onUpdateStatus={updateTaskStatus}
           />
         </section>
       )}
@@ -245,6 +248,7 @@ export default function Dashboard() {
             onEdit={setEditingTask}
             onDelete={setDeletingTask}
             onViewDetail={setViewingTask}
+            onUpdateStatus={updateTaskStatus}
           />
         )}
       </section>

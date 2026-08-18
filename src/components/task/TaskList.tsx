@@ -28,9 +28,10 @@ interface TaskListProps {
   onDelete: (task: Task) => void;
   onViewDetail?: (task: Task) => void;
   onReorder?: (tasks: Task[]) => void;
+  onUpdateStatus?: (id: string, status: Task['status']) => void;
 }
 
-export function TaskList({ tasks, onToggle, onTogglePin, onEdit, onDelete, onViewDetail, onReorder }: TaskListProps) {
+export function TaskList({ tasks, onToggle, onTogglePin, onEdit, onDelete, onViewDetail, onReorder, onUpdateStatus }: TaskListProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const idsKey = tasks.map((task) => task.id).join('|');
 
@@ -75,6 +76,7 @@ export function TaskList({ tasks, onToggle, onTogglePin, onEdit, onDelete, onVie
             onEdit={onEdit}
             onDelete={onDelete}
             onViewDetail={onViewDetail}
+            onUpdateStatus={onUpdateStatus}
           />
         ))}
       </div>
@@ -95,6 +97,7 @@ export function TaskList({ tasks, onToggle, onTogglePin, onEdit, onDelete, onVie
               onEdit={onEdit}
               onDelete={onDelete}
               onViewDetail={onViewDetail}
+              onUpdateStatus={onUpdateStatus}
             />
           ))}
         </div>

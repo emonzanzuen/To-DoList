@@ -45,9 +45,9 @@
     "subtitle": "Berikut ringkasan task kamu hari ini.",
     "totalTasks": "Total Task",
     "completed": "Selesai",
-    "pending": "Belum Selesai",
+    "pending": "Belum Mulai",
     "inProgress": "Sedang Dikerjakan",
-    "waiting": "Menunggu",
+    "waitingApproval": "Menunggu Approval",
     "overdue": "Terlambat",
     "progress": "Progres",
     "recentTasks": "Task Terbaru",
@@ -61,7 +61,8 @@
     "ideal": "Ideal",
     "actual": "Aktual",
     "burndownNoData": "Belum cukup data deadline untuk burndown chart.",
-    "noWorkload": "Belum ada task yang di-assign ke tim."
+    "noWorkload": "Belum ada task yang di-assign ke tim.",
+    "pendingApprovalTitle": "Task Menunggu Approval ({{count}})"
   },
   "task": {
     "add": "Tambah Task",
@@ -78,14 +79,15 @@
     "dueDate": "Tenggat Waktu",
     "status": "Status",
     "completed": "Selesai",
-    "pending": "Belum Selesai",
+    "pending": "Belum Mulai",
     "inProgress": "Sedang Dikerjakan",
-    "waiting": "Menunggu",
+    "waitingApproval": "Menunggu Approval",
     "overdue": "Terlambat",
     "overdueCount": "Telat",
     "markComplete": "Tandai selesai",
     "markPending": "Batalkan selesai",
     "clearCompleted": "Hapus yang Selesai",
+    "changeStatus": "Ubah status",
     "searchPlaceholder": "Cari task berdasarkan judul atau deskripsi...",
     "noTasks": "Belum ada task",
     "noTasksDescription": "Buat task pertama kamu untuk memulai.",
@@ -126,9 +128,9 @@
   "category": { "work": "Kerja", "study": "Belajar", "personal": "Pribadi", "shopping": "Belanja", "other": "Lainnya" },
   "status": {
     "completed": "Selesai",
-    "pending": "Belum Selesai",
+    "pending": "Belum Mulai",
     "inProgress": "Sedang Dikerjakan",
-    "waiting": "Menunggu"
+    "waitingApproval": "Menunggu Approval"
   },
   "approval": {
     "none": "",
@@ -276,7 +278,10 @@
     "autoMember": "Otomatis anggota",
     "inviteAction": "Invite ({{count}})",
     "client": "Klien",
-    "noClient": "Tanpa Klien"
+    "noClient": "Tanpa Klien",
+    "searchPlaceholder": "Cari project berdasarkan nama atau deskripsi...",
+    "noSearchResults": "Project tidak ditemukan",
+    "noSearchResultsDescription": "Coba ubah kata kunci pencarian Anda."
   },
   "settings": {
     "title": "Pengaturan",

@@ -22,6 +22,7 @@ interface TaskContextValue {
   toggleTask: (id: string) => void;
   togglePin: (id: string) => void;
   reorderTasks: (reordered: Task[]) => void;
+  updateTaskStatus: (id: string, status: Task['status']) => void;
   clearCompleted: () => void;
   deleteAll: () => void;
   getTaskById: (id: string) => Task | undefined;
@@ -38,11 +39,19 @@ function normalizeAssignees(task: Record<string, unknown>): string[] {
   return [];
 }
 
+// Backward compat: migrate old 'waiting' status to 'waiting_approval'
+function migrateStatus(status: string): Task['status'] {
+  if (status === 'waiting') return 'waiting_approval';
+  if (['pending', 'in_progress', 'waiting_approval', 'completed'].includes(status)) return status as Task['status'];
+  return 'pending';
+}
+
 export function TaskProvider({ children }: { children: ReactNode }) {
   const [tasks, setTasks] = useState<Task[]>(() =>
     loadTasks().map((t) => ({
       ...t,
       assigneeIds: normalizeAssignees(t as unknown as Record<string, unknown>),
+      status: migrateStatus(t.status),
     })),
   );
   const { logActivity } = useActivity();
@@ -140,7 +149,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
         const newTasks = [...previous];
         newTasks[taskIndex] = {
           ...currentTask,
-          status: willComplete ? 'completed' : 'pending',
+          status: willComplete ? 'completed' : 'in_progress',
           updatedAt: now,
         };
 
@@ -227,6 +236,28 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     setTasks(reordered);
   }, []);
 
+  const updateTaskStatus = useCallback(
+    (id: string, newStatus: Task['status']) => {
+      const task = tasks.find((t) => t.id === id);
+      if (!task) return;
+
+      setTasks((prev) =>
+        prev.map((t) =>
+          t.id === id ? { ...t, status: newStatus, updatedAt: nowISO() } : t,
+        ),
+      );
+
+      const actionMap: Record<string, string> = {
+        pending: 'reset_task',
+        in_progress: 'started_task',
+        waiting_approval: 'submitted_approval',
+        completed: 'completed_task',
+      };
+      logActivity('system', actionMap[newStatus] ?? 'updated_status', task.title);
+    },
+    [tasks, logActivity],
+  );
+
   const deleteTask = useCallback(
     (id: string) => {
       const task = tasks.find((t) => t.id === id);
@@ -281,6 +312,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
       toggleTask,
       togglePin,
       reorderTasks,
+      updateTaskStatus,
       clearCompleted,
       deleteAll,
       getTaskById,
@@ -288,7 +320,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
       updateComments,
       updateApproval,
     }),
-    [tasks, addTask, updateTask, deleteTask, toggleTask, togglePin, reorderTasks, clearCompleted, deleteAll, getTaskById, updateChecklist, updateComments, updateApproval],
+    [tasks, addTask, updateTask, deleteTask, toggleTask, togglePin, reorderTasks, updateTaskStatus, clearCompleted, deleteAll, getTaskById, updateChecklist, updateComments, updateApproval],
   );
 
   return <TaskContext.Provider value={value}>{children}</TaskContext.Provider>;

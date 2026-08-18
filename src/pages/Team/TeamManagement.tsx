@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, Trash2, Pencil, Users } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
@@ -6,7 +6,7 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { Badge } from '../../components/ui/Badge';
 import { useAuth } from '../../context/AuthContext';
 import { usePageEntrance } from '../../animations/gsap/usePageEntrance';
-import { MOCK_USERS, type User, type UserRole } from '../../types/user';
+import type { User, UserRole } from '../../types/user';
 import { readStorage, writeStorage } from '../../utils/storage';
 import { generateId } from '../../utils/taskUtils';
 
@@ -25,7 +25,7 @@ function loadUserOverrides(): Record<string, Partial<User>> {
 
 export default function TeamManagement() {
   const { t } = useTranslation();
-  const { user: currentUser, users: baseUsers, canManageTeam } = useAuth();
+  const { user: currentUser, users: baseUsers, canManageTeam, refreshUsers } = useAuth();
   const entranceRef = usePageEntrance();
 
   const [customUsers, setCustomUsers] = useState<User[]>(() => loadCustomUsers());
@@ -34,14 +34,11 @@ export default function TeamManagement() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [form, setForm] = useState({ name: '', email: '', role: 'member' as UserRole, team: '' });
 
-  // Terapkan overrides ke baseUsers
-  const allUsers = [
-    ...baseUsers.map((u) => {
-      const override = overrides[u.id];
-      return override ? { ...u, ...override } : u;
-    }),
-    ...customUsers,
-  ];
+  // baseUsers dari AuthContext sudah include MOCK_USERS + customUsers + overrides
+  const allUsers = baseUsers.map((u) => {
+    const override = overrides[u.id];
+    return override ? { ...u, ...override } : u;
+  });
 
   const saveCustomUsers = (updated: User[]) => {
     setCustomUsers(updated);
@@ -60,7 +57,6 @@ export default function TeamManagement() {
       const isCustom = customUsers.some((cu) => cu.id === editingUser.id);
 
       if (isCustom) {
-        // Edit user custom → update langsung di array customUsers
         const updated = customUsers.map((u) =>
           u.id === editingUser.id
             ? { ...u, name: form.name.trim(), email: form.email.trim(), role: form.role, team: form.team.trim() }
@@ -68,7 +64,6 @@ export default function TeamManagement() {
         );
         saveCustomUsers(updated);
       } else {
-        // Edit user bawaan → simpan sebagai override
         const updatedOverrides = {
           ...overrides,
           [editingUser.id]: {
@@ -83,7 +78,6 @@ export default function TeamManagement() {
 
       setEditingUser(null);
     } else {
-      // Tambah user baru
       const newUser: User = {
         id: generateId(),
         name: form.name.trim(),
@@ -98,6 +92,9 @@ export default function TeamManagement() {
     }
     setForm({ name: '', email: '', role: 'member', team: '' });
     setShowForm(false);
+
+    // Refresh AuthContext agar users ter-update
+    refreshUsers?.();
   };
 
   const handleEdit = (u: User) => {
@@ -107,7 +104,19 @@ export default function TeamManagement() {
   };
 
   const handleDelete = (id: string) => {
-    saveCustomUsers(customUsers.filter((u) => u.id !== id));
+    // Hapus dari custom users
+    const updatedCustom = customUsers.filter((u) => u.id !== id);
+    saveCustomUsers(updatedCustom);
+
+    // Hapus override jika ada
+    if (overrides[id]) {
+      const updatedOverrides = { ...overrides };
+      delete updatedOverrides[id];
+      saveOverrides(updatedOverrides);
+    }
+
+    // Refresh AuthContext agar users ter-update
+    refreshUsers?.();
   };
 
   const roleBadge: Record<string, string> = {
@@ -215,9 +224,8 @@ export default function TeamManagement() {
                 .toUpperCase();
               const isSelf = currentUser?.id === u.id;
 
-              // Admin bisa edit SEMUA user, tapi hanya bisa hapus user custom
               const canEdit = canManageTeam;
-              const canDelete = canManageTeam && isCustom;
+              const canDelete = canManageTeam && isCustom && !isSelf;
 
               return (
                 <div key={u.id} className="flex items-center gap-3 rounded-2xl border border-line bg-surface p-4">

@@ -11,9 +11,10 @@ interface SortableTaskCardProps {
   onEdit: (task: Task) => void;
   onDelete: (task: Task) => void;
   onViewDetail?: (task: Task) => void;
+  onUpdateStatus?: (id: string, status: Task['status']) => void;
 }
 
-export function SortableTaskCard({ task, onToggle, onTogglePin, onEdit, onDelete, onViewDetail }: SortableTaskCardProps) {
+export function SortableTaskCard({ task, onToggle, onTogglePin, onEdit, onDelete, onViewDetail, onUpdateStatus }: SortableTaskCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id });
 
   const style = {
@@ -40,6 +41,7 @@ export function SortableTaskCard({ task, onToggle, onTogglePin, onEdit, onDelete
             onEdit={onEdit}
             onDelete={onDelete}
             onViewDetail={onViewDetail}
+            onUpdateStatus={onUpdateStatus}
           />
         </div>
       </div>

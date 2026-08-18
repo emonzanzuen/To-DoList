@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Trash2, Pencil, FolderOpen, Eye } from 'lucide-react';
+import { Plus, Trash2, Pencil, FolderOpen, Eye, Search } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Badge } from '../../components/ui/Badge';
@@ -29,6 +29,7 @@ export default function ProjectsPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [deletingProject, setDeletingProject] = useState<Project | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [form, setForm] = useState({ name: '', description: '', status: 'active' as Project['status'] });
   const [formClientId, setFormClientId] = useState('');
 
@@ -40,9 +41,20 @@ export default function ProjectsPage() {
     return projects.filter((p) => p.memberIds.includes(user.id));
   }, [projects, user]);
 
+  // Search filter
+  const searchedProjects = useMemo(() => {
+    if (!searchQuery.trim()) return visibleProjects;
+    const q = searchQuery.toLowerCase();
+    return visibleProjects.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        p.description.toLowerCase().includes(q),
+    );
+  }, [visibleProjects, searchQuery]);
+
   // Hitung stats per project
   const projectStats = useMemo(() => {
-    return visibleProjects.map((project) => {
+    return searchedProjects.map((project) => {
       const projectTasks = tasks.filter((t) => t.projectId === project.id);
       const total = projectTasks.length;
       const completed = projectTasks.filter((t) => t.status === 'completed').length;
@@ -71,7 +83,7 @@ export default function ProjectsPage() {
         nearestDeadline,
       };
     });
-  }, [visibleProjects, tasks, milestones]);
+  }, [searchedProjects, tasks, milestones]);
 
   const handleSubmit = () => {
     if (!form.name.trim()) return;
@@ -141,6 +153,18 @@ export default function ProjectsPage() {
             {showForm ? t('common.cancel') : t('project.add')}
           </Button>
         )}
+      </div>
+
+      {/* Search Bar */}
+      <div data-animate className="relative">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder={t('project.searchPlaceholder')}
+          className="w-full rounded-xl border border-line bg-surface py-2.5 pl-9 pr-3 text-sm text-ink placeholder:text-muted/70 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40"
+        />
       </div>
 
       {/* Form */}
@@ -220,6 +244,12 @@ export default function ProjectsPage() {
                 </Button>
               ) : undefined
             }
+          />
+        ) : searchedProjects.length === 0 ? (
+          <EmptyState
+            icon={Search}
+            title={t('project.noSearchResults')}
+            description={t('project.noSearchResultsDescription')}
           />
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

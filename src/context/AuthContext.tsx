@@ -11,6 +11,7 @@ interface AuthContextValue {
   users: User[];
   login: (userId: string) => void;
   logout: () => void;
+  refreshUsers: () => void;
   isAuthenticated: boolean;
   isAdmin: boolean;
   isManager: boolean;
@@ -61,6 +62,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return findUserById(storedId);
   });
 
+  // Counter untuk trigger refresh allUsers
+  const [usersVersion, setUsersVersion] = useState(0);
+
   // Refresh user dari allUsers saat storage berubah (misal Admin edit user di tab lain)
   useEffect(() => {
     if (user) {
@@ -84,16 +88,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     writeStorage(AUTH_STORAGE_KEY, '');
   }, []);
 
+  const refreshUsers = useCallback(() => {
+    setUsersVersion((v) => v + 1);
+    // Juga refresh current user jika ada
+    if (user) {
+      const refreshed = findUserById(user.id);
+      if (refreshed) {
+        setUser(refreshed);
+      }
+    }
+  }, [user]);
+
   const role: UserRole | null = user?.role ?? null;
 
   // Gabungkan semua users: MOCK_USERS + overrides + customUsers
-  const allUsers = useMemo(() => getAllUsers(), [user]);
+  // usersVersion sebagai dependency agar re-compute saat refreshUsers dipanggil
+  const allUsers = useMemo(() => getAllUsers(), [user, usersVersion]);
 
   const value = useMemo<AuthContextValue>(() => ({
     user,
     users: allUsers,
     login,
     logout,
+    refreshUsers,
     isAuthenticated: user !== null,
     isAdmin: role === 'admin',
     isManager: role === 'manager',
@@ -111,7 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (role === 'admin' || role === 'manager') return true;
       return assigneeId === user.id;
     },
-  }), [user, allUsers, login, logout, role]);
+  }), [user, allUsers, login, logout, refreshUsers, role]);
 
   return (
     <AuthContext.Provider value={value}>

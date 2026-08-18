@@ -47,7 +47,7 @@
     "completed": "Completed",
     "pending": "Pending",
     "inProgress": "In Progress",
-    "waiting": "Waiting",
+    "waitingApproval": "Waiting for Approval",
     "overdue": "Overdue",
     "progress": "Progress",
     "recentTasks": "Recent Tasks",
@@ -61,7 +61,8 @@
     "ideal": "Ideal",
     "actual": "Actual",
     "burndownNoData": "Not enough deadline data for burndown chart.",
-    "noWorkload": "No tasks assigned to team yet."
+    "noWorkload": "No tasks assigned to team yet.",
+    "pendingApprovalTitle": "Tasks Waiting for Approval ({{count}})"
   },
   "task": {
     "add": "Add Task",
@@ -80,12 +81,13 @@
     "completed": "Completed",
     "pending": "Pending",
     "inProgress": "In Progress",
-    "waiting": "Waiting",
+    "waitingApproval": "Waiting for Approval",
     "overdue": "Overdue",
     "overdueCount": "Overdue",
     "markComplete": "Mark as complete",
     "markPending": "Mark as pending",
     "clearCompleted": "Clear Completed",
+    "changeStatus": "Change status",
     "searchPlaceholder": "Search tasks by title or description...",
     "noTasks": "No tasks yet",
     "noTasksDescription": "Create your first task to get started.",
@@ -122,7 +124,7 @@
     "completed": "Completed",
     "pending": "Pending",
     "inProgress": "In Progress",
-    "waiting": "Waiting"
+    "waitingApproval": "Waiting for Approval"
   },
   "approval": {
     "none": "",
@@ -263,7 +265,10 @@
     "autoMember": "Auto member",
     "inviteAction": "Invite ({{count}})",
     "client": "Client",
-    "noClient": "No Client"
+    "noClient": "No Client",
+    "searchPlaceholder": "Search projects by name or description...",
+    "noSearchResults": "No projects found",
+    "noSearchResultsDescription": "Try adjusting your search query."
   },
   "settings": {
     "title": "Settings",

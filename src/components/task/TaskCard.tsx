@@ -1,14 +1,20 @@
+import { useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   AlertTriangle,
   ArrowDown,
   ArrowUp,
   Calendar,
   Check,
+  CheckCircle2,
+  Circle,
+  Clock,
   MessageSquare,
   Minus,
   Paperclip,
   Pencil,
   RefreshCw,
+  ShieldAlert,
   Star,
   Trash2,
   Eye,
@@ -29,6 +35,7 @@ interface TaskCardProps {
   onEdit: (task: Task) => void;
   onDelete: (task: Task) => void;
   onViewDetail?: (task: Task) => void;
+  onUpdateStatus?: (id: string, status: Task['status']) => void;
 }
 
 const PRIORITY_ICON: Record<TaskPriority, LucideIcon> = {
@@ -38,9 +45,26 @@ const PRIORITY_ICON: Record<TaskPriority, LucideIcon> = {
   urgent: AlertTriangle,
 };
 
-export function TaskCard({ task, onToggle, onTogglePin, onEdit, onDelete, onViewDetail }: TaskCardProps) {
+const STATUS_CONFIG: Record<Task['status'], { icon: LucideIcon; color: string; bg: string }> = {
+  pending: { icon: Circle, color: 'text-muted', bg: 'bg-muted/10' },
+  in_progress: { icon: Clock, color: 'text-info', bg: 'bg-info/10' },
+  waiting_approval: { icon: ShieldAlert, color: 'text-warning', bg: 'bg-warning/10' },
+  completed: { icon: CheckCircle2, color: 'text-success', bg: 'bg-success/10' },
+};
+
+const STATUS_LABEL_KEY: Record<Task['status'], string> = {
+  pending: 'pending',
+  in_progress: 'inProgress',
+  waiting_approval: 'waitingApproval',
+  completed: 'completed',
+};
+
+export function TaskCard({ task, onToggle, onTogglePin, onEdit, onDelete, onViewDetail, onUpdateStatus }: TaskCardProps) {
   const { t, i18n } = useTranslation();
   const { canDeleteTask, canEditTask } = useAuth();
+  const [showStatusMenu, setShowStatusMenu] = useState(false);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+  const statusButtonRef = useRef<HTMLButtonElement>(null);
 
   const completed = task.status === 'completed';
   const overdue = isOverdue(task);
@@ -49,6 +73,19 @@ export function TaskCard({ task, onToggle, onTogglePin, onEdit, onDelete, onView
   const hasAttachment = !!task.attachmentUrl;
   const checklistDone = task.checklist.filter((c) => c.done).length;
   const checklistTotal = task.checklist.length;
+  const currentStatusConfig = STATUS_CONFIG[task.status];
+  const CurrentStatusIcon = currentStatusConfig.icon;
+
+  const handleOpenStatusMenu = () => {
+    if (statusButtonRef.current) {
+      const rect = statusButtonRef.current.getBoundingClientRect();
+      setMenuPosition({
+        top: rect.bottom + 4,
+        left: rect.left,
+      });
+    }
+    setShowStatusMenu(true);
+  };
 
   return (
     <article
@@ -62,19 +99,58 @@ export function TaskCard({ task, onToggle, onTogglePin, onEdit, onDelete, onView
       )}
 
       <div className="flex items-start gap-3">
-        <button
-          type="button"
-          onClick={() => onToggle(task.id)}
-          aria-label={completed ? t('task.markPending') : t('task.markComplete')}
-          aria-pressed={completed}
-          className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
-            completed
-              ? 'border-success bg-success text-white'
-              : 'border-line text-transparent hover:border-primary'
-          }`}
-        >
-          <Check className="h-4 w-4" aria-hidden="true" />
-        </button>
+        {/* Status Dropdown */}
+        <div className="mt-0.5 shrink-0">
+          {onUpdateStatus ? (
+            <button
+              ref={statusButtonRef}
+              type="button"
+              onClick={handleOpenStatusMenu}
+              className={`flex h-7 w-7 items-center justify-center rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${currentStatusConfig.bg} ${currentStatusConfig.color} hover:opacity-80`}
+              aria-label={t('task.changeStatus')}
+            >
+              <CurrentStatusIcon className="h-4 w-4" />
+            </button>
+          ) : (
+            <div className={`flex h-7 w-7 items-center justify-center rounded-lg ${currentStatusConfig.bg} ${currentStatusConfig.color}`}>
+              <CurrentStatusIcon className="h-4 w-4" />
+            </div>
+          )}
+        </div>
+
+        {/* Portal Dropdown Menu */}
+        {showStatusMenu && createPortal(
+          <>
+            <div className="fixed inset-0 z-[9998]" onClick={() => setShowStatusMenu(false)} />
+            <div
+              className="fixed z-[9999] w-48 overflow-hidden rounded-xl border border-line bg-surface shadow-xl ring-1 ring-black/5"
+              style={{ top: menuPosition.top, left: menuPosition.left }}
+            >
+              {(Object.entries(STATUS_CONFIG) as [Task['status'], typeof currentStatusConfig][]).map(([statusKey, config]) => {
+                const StatusIcon = config.icon;
+                const isActive = task.status === statusKey;
+                return (
+                  <button
+                    key={statusKey}
+                    type="button"
+                    onClick={() => {
+                      onUpdateStatus!(task.id, statusKey);
+                      setShowStatusMenu(false);
+                    }}
+                    className={`flex w-full items-center gap-2 px-3 py-2 text-xs transition-colors ${
+                      isActive ? 'bg-primary/10 text-primary font-medium' : 'text-ink hover:bg-background'
+                    }`}
+                  >
+                    <StatusIcon className={`h-3.5 w-3.5 ${config.color}`} />
+                    {t(`status.${STATUS_LABEL_KEY[statusKey]}`)}
+                    {isActive && <Check className="ml-auto h-3 w-3" />}
+                  </button>
+                );
+              })}
+            </div>
+          </>,
+          document.body,
+        )}
 
         <div className="min-w-0 flex-1">
           <h3 className={`truncate text-sm font-semibold ${completed ? 'text-muted line-through' : 'text-ink'}`}>
@@ -158,7 +234,7 @@ export function TaskCard({ task, onToggle, onTogglePin, onEdit, onDelete, onView
             <button
               type="button"
               onClick={() => onViewDetail(task)}
-              aria-label="Detail"
+              aria-label={t('common.detail')}
               className="rounded-lg p-2 text-muted transition-colors hover:bg-background hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
             >
               <Eye className="h-4 w-4" aria-hidden="true" />
