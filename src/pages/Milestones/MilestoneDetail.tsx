@@ -1,11 +1,12 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Calendar, CheckCircle2, Users, Flag } from 'lucide-react';
+import { ArrowLeft, Calendar, CheckCircle2, Flag, FolderOpen } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { ProgressBar } from '../../components/ui/ProgressBar';
 import { EmptyState } from '../../components/ui/EmptyState';
+import { TaskCard } from '../../components/task/TaskCard';
 import { useMilestones } from '../../context/MilestoneContext';
 import { useTasks } from '../../context/TaskContext';
 import { useProjects } from '../../context/ProjectContext';
@@ -19,9 +20,9 @@ export default function MilestoneDetail() {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const { milestones } = useMilestones();
-  const { tasks, toggleTask } = useTasks();
+  const { tasks, toggleTask, togglePin, updateTaskStatus } = useTasks();
   const { projects } = useProjects();
-  const { user, users, canSeeAllTasks } = useAuth();
+  const { user } = useAuth();
   const entranceRef = usePageEntrance();
 
   const milestone = milestones.find((m) => m.id === id);
@@ -69,13 +70,6 @@ export default function MilestoneDetail() {
     ? new Date(`${milestone.dueDate}T23:59:59`).getTime() < Date.now()
     : false;
 
-  const priorityColors: Record<string, string> = {
-    urgent: 'text-danger font-semibold',
-    high: 'text-orange-500',
-    medium: 'text-yellow-500',
-    low: 'text-blue-400',
-  };
-
   return (
     <div ref={entranceRef} className="space-y-6">
       {/* Back Button */}
@@ -94,7 +88,10 @@ export default function MilestoneDetail() {
               </Badge>
             </div>
             {project && (
-              <p className="text-sm text-muted">📁 {project.name}</p>
+              <div className="flex items-center gap-1.5 text-sm text-muted">
+                <FolderOpen className="h-3.5 w-3.5" />
+                <span>{project.name}</span>
+              </div>
             )}
             {milestone.description && (
               <p className="text-sm text-muted">{milestone.description}</p>
@@ -145,7 +142,7 @@ export default function MilestoneDetail() {
         </div>
       </div>
 
-      {/* Tasks List */}
+      {/* Tasks List — Menggunakan TaskCard dengan update status */}
       <div data-animate>
         <h2 className="mb-3 text-sm font-semibold text-ink">
           {t('milestone.tasksInMilestone', { count: stats.total })}
@@ -159,105 +156,17 @@ export default function MilestoneDetail() {
           />
         ) : (
           <div className="space-y-2">
-            {milestoneTasks.map((task) => {
-              const isMyTask = user ? task.assigneeIds.includes(user.id) : false;
-              const canInteract = isMyTask || canSeeAllTasks;
-              const taskOverdue = task.dueDate && task.status !== 'completed'
-                ? new Date(`${task.dueDate}T23:59:59`).getTime() < Date.now()
-                : false;
-
-              const clDone = task.checklist.filter((c) => c.done).length;
-              const clTotal = task.checklist.length;
-              const clPct = clTotal > 0 ? Math.round((clDone / clTotal) * 100) : 0;
-
-              const assigneeDisplay = task.assigneeIds.length === 0
-                ? t('task.unassigned')
-                : task.assigneeIds
-                    .map((aid) => {
-                      const u = users.find((usr) => usr.id === aid);
-                      return u?.name.split(' ')[0];
-                    })
-                    .filter(Boolean)
-                    .join(', ') || 'Unknown';
-
-              return (
-                <div
-                  key={task.id}
-                  className={`rounded-xl border p-4 space-y-2 ${
-                    task.status === 'completed'
-                      ? 'border-success/20 bg-success/5 opacity-75'
-                      : taskOverdue
-                        ? 'border-danger/30 bg-danger/5'
-                        : 'border-line bg-surface'
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-start gap-3 min-w-0 flex-1">
-                      {canInteract ? (
-                        <button
-                          onClick={() => toggleTask(task.id)}
-                          className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-colors ${
-                            task.status === 'completed'
-                              ? 'border-success bg-success text-white'
-                              : 'border-line hover:border-primary'
-                          }`}
-                        >
-                          {task.status === 'completed' && <CheckCircle2 className="h-3.5 w-3.5" />}
-                        </button>
-                      ) : (
-                        <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border border-line bg-muted/10" title={t('task.notYourTask')}>
-                          <span className="text-[8px] text-muted">🔒</span>
-                        </div>
-                      )}
-
-                      <div className="min-w-0 flex-1">
-                        <p className={`text-sm font-medium ${task.status === 'completed' ? 'text-muted line-through' : 'text-ink'}`}>
-                          {task.title}
-                        </p>
-                        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted">
-                          <span className={priorityColors[task.priority] ?? ''}>
-                            {task.priority.toUpperCase()}
-                          </span>
-                          {task.dueDate && (
-                            <span className={taskOverdue ? 'text-danger font-medium' : ''}>
-                              📅 {formatDate(task.dueDate, i18n.language)}
-                            </span>
-                          )}
-                          <span className="flex items-center gap-1">
-                            <Users className="h-3 w-3" />
-                            {assigneeDisplay}
-                          </span>
-                          {clTotal > 0 && (
-                            <span>☑️ {clDone}/{clTotal}</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    <Badge className={
-                      task.status === 'completed' ? 'bg-success/10 text-success' :
-                      task.status === 'in_progress' ? 'bg-info/10 text-info' :
-                      task.status === 'waiting_approval' ? 'bg-warning/10 text-warning' :
-                      'bg-muted/10 text-muted'
-                    }>
-                      {task.status.replace('_', ' ')}
-                    </Badge>
-                  </div>
-
-                  {/* Checklist Progress Bar */}
-                  {clTotal > 0 && (
-                    <div className="pl-8">
-                      <div className="flex items-center gap-2">
-                        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-line">
-                          <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${clPct}%` }} />
-                        </div>
-                        <span className="text-[10px] text-muted">{clPct}%</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+            {milestoneTasks.map((task) => (
+              <TaskCard
+                key={task.id}
+                task={task}
+                onToggle={toggleTask}
+                onTogglePin={togglePin}
+                onUpdateStatus={updateTaskStatus}
+                onEdit={() => {}}
+                onDelete={() => {}}
+              />
+            ))}
           </div>
         )}
       </div>

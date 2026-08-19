@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Trash2, Pencil, Flag, Calendar, CheckCircle2, Clock, AlertTriangle, Eye } from 'lucide-react';
+import { Plus, Trash2, Pencil, Flag, Calendar, CheckCircle2, Clock, AlertTriangle, Eye, FolderOpen } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Badge } from '../../components/ui/Badge';
@@ -234,7 +234,10 @@ export default function MilestonesPage() {
                     <div className="min-w-0 flex-1">
                       <h3 className="truncate text-sm font-semibold text-ink">{m.name}</h3>
                       {projectName && (
-                        <p className="truncate text-xs text-muted mt-0.5">📁 {projectName}</p>
+                        <div className="mt-0.5 flex items-center gap-1 truncate text-xs text-muted">
+                          <FolderOpen className="h-3 w-3" />
+                          <span className="truncate">{projectName}</span>
+                        </div>
                       )}
                     </div>
                     <Badge className={statusBadge[m.status]}>

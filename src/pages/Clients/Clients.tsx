@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Trash2, Pencil, Building2, Eye, Briefcase } from 'lucide-react';
+import { Plus, Trash2, Pencil, Building2, Eye, Briefcase, Mail, Phone } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Badge } from '../../components/ui/Badge';
@@ -164,8 +164,18 @@ export default function ClientsPage() {
                     </div>
                   </div>
 
-                  {client.email && <p className="truncate text-xs text-muted">📧 {client.email}</p>}
-                  {client.phone && <p className="truncate text-xs text-muted">📞 {client.phone}</p>}
+                  {client.email && (
+                    <div className="flex items-center gap-1.5 truncate text-xs text-muted">
+                      <Mail className="h-3.5 w-3.5 shrink-0" />
+                      <span className="truncate">{client.email}</span>
+                    </div>
+                  )}
+                  {client.phone && (
+                    <div className="flex items-center gap-1.5 truncate text-xs text-muted">
+                      <Phone className="h-3.5 w-3.5 shrink-0" />
+                      <span className="truncate">{client.phone}</span>
+                    </div>
+                  )}
 
                   <div className="flex items-center gap-2 pt-1">
                     <Badge className="bg-info/10 text-info">
