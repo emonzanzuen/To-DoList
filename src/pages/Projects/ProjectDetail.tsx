@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Calendar, CheckCircle2, Users, FolderOpen, X, Plus } from 'lucide-react';
+import { ArrowLeft, Calendar, CheckCircle2, Users, FolderOpen, X, Plus, Target, ListChecks, Lock } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { ProgressBar } from '../../components/ui/ProgressBar';
@@ -34,6 +34,18 @@ export default function ProjectDetail() {
   const isAdminOrManager = user?.role === 'admin' || user?.role === 'manager';
   const canAccess = isAdminOrManager || isUserMember;
 
+  // Auto-sync: ensure admin & manager are always in memberIds
+  useEffect(() => {
+    if (!project || !user) return;
+    const adminManagerIds = users
+      .filter((u) => u.role === 'admin' || u.role === 'manager')
+      .map((u) => u.id);
+    const missingIds = adminManagerIds.filter((aid) => !project.memberIds.includes(aid));
+    if (missingIds.length > 0) {
+      missingIds.forEach((uid) => inviteMember(project.id, uid));
+    }
+  }, [project?.id, users, inviteMember]);
+
   const projectTasks = useMemo(() => {
     if (!project) return [];
     return tasks.filter((t) => t.projectId === project.id);
@@ -57,9 +69,14 @@ export default function ProjectDetail() {
     return milestones.filter((m) => m.projectId === project.id);
   }, [milestones, project]);
 
+  // Members: project memberIds + admin/manager (always visible)
   const members = useMemo(() => {
     if (!project) return [];
-    return users.filter((u) => project.memberIds.includes(u.id));
+    return users.filter((u) => {
+      if (project.memberIds.includes(u.id)) return true;
+      if (u.role === 'admin' || u.role === 'manager') return true;
+      return false;
+    });
   }, [users, project]);
 
   if (!project || !canAccess) {
@@ -119,13 +136,14 @@ export default function ProjectDetail() {
           </div>
           {canDeleteProject && (
             <Button size="sm" variant="secondary" onClick={() => navigate('/projects')}>
-              ✏️ {t('common.edit')}
+              <X className="h-4 w-4" /> {t('common.edit')}
             </Button>
           )}
         </div>
 
-        <div className="text-xs text-muted">
-          📅 {t('project.createdDate')}: {formatDate(project.createdAt.split('T')[0], i18n.language)}
+        <div className="flex items-center gap-1.5 text-xs text-muted">
+          <Calendar className="h-3.5 w-3.5" />
+          {t('project.createdDate')}: {formatDate(project.createdAt.split('T')[0], i18n.language)}
         </div>
 
         {/* Progress */}
@@ -181,6 +199,8 @@ export default function ProjectDetail() {
           <div className="space-y-2">
             {members.map((m) => {
               const initials = m.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
+              const isAutoMember = m.role === 'admin' || m.role === 'manager';
+              const canRemove = !isAutoMember && isAdminOrManager && m.id !== user?.id;
               const roleBadge: Record<string, string> = {
                 admin: 'bg-danger/10 text-danger',
                 manager: 'bg-warning/10 text-warning',
@@ -197,10 +217,15 @@ export default function ProjectDetail() {
                       <div className="flex items-center gap-2">
                         <Badge className={roleBadge[m.role]}>{t(`auth.role.${m.role}`)}</Badge>
                         <span className="text-[10px] text-muted">{m.team}</span>
+                        {isAutoMember && (
+                          <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[9px] font-medium text-primary">
+                            {t('project.autoMember')}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
-                  {isAdminOrManager && m.id !== user?.id && (
+                  {canRemove && (
                     <button
                       onClick={() => removeMember(project.id, m.id)}
                       className="rounded-lg p-1.5 text-muted hover:bg-danger/10 hover:text-danger"
@@ -219,7 +244,7 @@ export default function ProjectDetail() {
       {/* Milestones */}
       <div data-animate className="space-y-3">
         <h2 className="text-sm font-semibold text-ink flex items-center gap-2">
-          🎯 {t('project.milestones')} ({projectMilestones.length})
+          <Target className="h-4 w-4" /> {t('project.milestones')} ({projectMilestones.length})
         </h2>
 
         {projectMilestones.length === 0 ? (
@@ -286,7 +311,7 @@ export default function ProjectDetail() {
       {/* Tasks Terbaru */}
       <div data-animate className="space-y-3">
         <h2 className="text-sm font-semibold text-ink flex items-center gap-2">
-          📋 {t('project.recentTasks', { shown: Math.min(projectTasks.length, 5), total: stats.total })}
+          <ListChecks className="h-4 w-4" /> {t('project.recentTasks', { shown: Math.min(projectTasks.length, 5), total: stats.total })}
         </h2>
 
         {projectTasks.length === 0 ? (
@@ -341,7 +366,7 @@ export default function ProjectDetail() {
                         </button>
                       ) : (
                         <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border border-line bg-muted/10" title={t('task.notYourTask')}>
-                          <span className="text-[8px] text-muted">🔒</span>
+                          <Lock className="h-3 w-3 text-muted" />
                         </div>
                       )}
 
@@ -354,8 +379,9 @@ export default function ProjectDetail() {
                             {task.priority.toUpperCase()}
                           </span>
                           {task.dueDate && (
-                            <span className={taskOverdue ? 'text-danger font-medium' : ''}>
-                              📅 {formatDate(task.dueDate, i18n.language)}
+                            <span className={`flex items-center gap-1 ${taskOverdue ? 'text-danger font-medium' : ''}`}>
+                              <Calendar className="h-3 w-3" />
+                              {formatDate(task.dueDate, i18n.language)}
                             </span>
                           )}
                           <span className="flex items-center gap-1">
@@ -363,7 +389,10 @@ export default function ProjectDetail() {
                             {assigneeDisplay}
                           </span>
                           {clTotal > 0 && (
-                            <span>☑️ {clDone}/{clTotal}</span>
+                            <span className="flex items-center gap-1">
+                              <CheckCircle2 className="h-3 w-3" />
+                              {clDone}/{clTotal}
+                            </span>
                           )}
                         </div>
                       </div>
@@ -372,7 +401,7 @@ export default function ProjectDetail() {
                     <Badge className={
                       task.status === 'completed' ? 'bg-success/10 text-success' :
                       task.status === 'in_progress' ? 'bg-info/10 text-info' :
-                      task.status === 'waiting' ? 'bg-warning/10 text-warning' :
+                      task.status === 'waiting_approval' ? 'bg-warning/10 text-warning' :
                       'bg-muted/10 text-muted'
                     }>
                       {task.status.replace('_', ' ')}

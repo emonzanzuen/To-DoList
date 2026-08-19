@@ -1,5 +1,8 @@
 {
-  "app": { "name": "Business Task Manager" },
+  "app": {
+    "name": "Business Task Manager",
+    "tagline": "Business Todo & Task Management"
+  },
   "nav": {
     "dashboard": "Dashboard",
     "tasks": "Tasks",
@@ -62,7 +65,17 @@
     "actual": "Actual",
     "burndownNoData": "Not enough deadline data for burndown chart.",
     "noWorkload": "No tasks assigned to team yet.",
-    "pendingApprovalTitle": "Tasks Waiting for Approval ({{count}})"
+    "pendingApprovalTitle": "Tasks Waiting for Approval ({{count}})",
+    "statusAhead": "Ahead of Schedule",
+    "statusOnTrack": "On Track",
+    "statusBehind": "Behind Schedule",
+    "tasksRemaining": "Tasks",
+    "timeline": "Timeline",
+    "completedToday": "Completed",
+    "behindSchedule": "behind schedule",
+    "aheadSchedule": "ahead of schedule",
+    "remainingArea": "Remaining Tasks",
+    "totalTasksWithDeadline": "{{count}} tasks with deadline"
   },
   "task": {
     "add": "Add Task",
@@ -101,8 +114,16 @@
     "projectPlaceholder": "Project name or ID",
     "assignee": "Assignee",
     "assigneePlaceholder": "Team member name or ID",
+    "assigneeCount": "person assigned",
     "milestone": "Milestone",
-    "timeSpent": "Time (minutes)",
+    "timeEstimate": "Time Estimate",
+    "timeEstimateHint": "Estimated work duration in hours.",
+    "hours": "hours",
+    "personalTaskHint": "Without a project, this task will be personal (assigned to you only).",
+    "noMembersInProject": "No members in this project yet. Invite members first.",
+    "noMilestoneAvailable": "No milestones available",
+    "selectMilestone": "Select Milestone",
+    "createMilestoneHint": "Create a milestone first in the Milestones page.",
     "attachment": "Attachment (URL)",
     "attachmentPlaceholder": "https://...",
     "repeat": { "label": "Repeat", "none": "No repeat", "daily": "Daily", "weekly": "Weekly", "monthly": "Monthly" },
@@ -281,7 +302,24 @@
     "dangerDescription": "Delete all task data from this application. This action cannot be undone.",
     "deleteAll": "Delete All Data",
     "deleteAllConfirmTitle": "Delete all data?",
-    "deleteAllConfirmMessage": "All tasks will be permanently removed from LocalStorage. This action cannot be undone."
+    "deleteAllConfirmMessage": "All tasks will be permanently removed from LocalStorage. This action cannot be undone.",
+    "companyProfile": "Company Profile",
+    "companyProfileDescription": "Manage your organization's information and branding.",
+    "companyName": "Company Name",
+    "tagline": "Tagline",
+    "website": "Website",
+    "contactEmail": "Contact Email",
+    "contactPhone": "Contact Phone",
+    "address": "Address",
+    "changeLogo": "Change Logo",
+    "saveChanges": "Save Changes",
+    "savedSuccessfully": "Changes saved successfully!",
+    "preferences": "Preferences",
+    "personalProfile": "Personal Profile",
+    "personalProfileDescription": "Your account information.",
+    "viewOnly": "View Only",
+    "doubleClickToPreview": "Double-click to preview full size",
+    "clickOutsideToClose": "Click outside to close"
   },
   "validation": { "titleRequired": "Title is required.", "priorityRequired": "Priority is required.", "categoryRequired": "Category is required.", "invalidDate": "Invalid date." },
   "toast": {

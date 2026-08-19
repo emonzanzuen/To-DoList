@@ -237,7 +237,7 @@ export default function MilestoneDetail() {
                     <Badge className={
                       task.status === 'completed' ? 'bg-success/10 text-success' :
                       task.status === 'in_progress' ? 'bg-info/10 text-info' :
-                      task.status === 'waiting' ? 'bg-warning/10 text-warning' :
+                      task.status === 'waiting_approval' ? 'bg-warning/10 text-warning' :
                       'bg-muted/10 text-muted'
                     }>
                       {task.status.replace('_', ' ')}

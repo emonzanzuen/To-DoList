@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useMemo, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CATEGORIES, PRIORITIES, REPEAT_INTERVALS } from '../../constants';
 import type { RepeatInterval, TaskCategory, TaskFormData, TaskPriority } from '../../types/task';
@@ -25,7 +25,7 @@ interface TaskFormState {
   assigneeIds: string[];
   milestone: string;
   attachmentUrl: string;
-  timeSpentMinutes: number;
+  timeSpentHours: number;
 }
 
 type FormErrors = Partial<Record<'title' | 'priority' | 'category' | 'dueDate', string>>;
@@ -47,14 +47,38 @@ export function TaskForm({ initialData, submitLabel, onSubmit, onCancel }: TaskF
     assigneeIds: initialData?.assigneeIds ?? [],
     milestone: initialData?.milestone ?? '',
     attachmentUrl: initialData?.attachmentUrl ?? '',
-    timeSpentMinutes: initialData?.timeSpentMinutes ?? 0,
+    // Konversi menit ke jam untuk display (1 decimal)
+    timeSpentHours: initialData ? Math.round((initialData.timeSpentMinutes / 60) * 10) / 10 : 0,
   });
   const [errors, setErrors] = useState<FormErrors>({});
 
-  // Filter milestones berdasarkan project yang dipilih
-  const filteredMilestones = form.projectId
-    ? milestones.filter((m) => m.projectId === form.projectId)
-    : milestones;
+  // Get selected project
+  const selectedProject = useMemo(
+    () => projects.find((p) => p.id === form.projectId),
+    [projects, form.projectId],
+  );
+
+  // Filter assignees: only project members when project is selected
+  const availableAssignees = useMemo(() => {
+    if (!selectedProject) return [];
+    return users.filter((u) => selectedProject.memberIds.includes(u.id));
+  }, [users, selectedProject]);
+
+  // Filter milestones: only milestones linked to selected project
+  const filteredMilestones = useMemo(
+    () => form.projectId ? milestones.filter((m) => m.projectId === form.projectId) : [],
+    [milestones, form.projectId],
+  );
+
+  // Reset assignees & milestone when project changes
+  const handleProjectChange = (newProjectId: string) => {
+    setForm((p) => ({
+      ...p,
+      projectId: newProjectId,
+      assigneeIds: [],
+      milestone: '',
+    }));
+  };
 
   const validate = (): FormErrors => {
     const next: FormErrors = {};
@@ -72,6 +96,10 @@ export function TaskForm({ initialData, submitLabel, onSubmit, onCancel }: TaskF
     const nextErrors = validate();
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
+
+    // Konversi jam ke menit saat submit
+    const timeSpentMinutes = Math.round(form.timeSpentHours * 60);
+
     onSubmit({
       title: form.title,
       description: form.description,
@@ -83,7 +111,7 @@ export function TaskForm({ initialData, submitLabel, onSubmit, onCancel }: TaskF
       assigneeIds: form.assigneeIds,
       milestone: form.milestone,
       attachmentUrl: form.attachmentUrl,
-      timeSpentMinutes: form.timeSpentMinutes,
+      timeSpentMinutes,
     });
   };
 
@@ -191,67 +219,76 @@ export function TaskForm({ initialData, submitLabel, onSubmit, onCancel }: TaskF
         </div>
       </div>
 
-      {/* Project + Assignee */}
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <label htmlFor="task-project" className={labelClass}>{t('task.project')}</label>
-          <select
-            id="task-project"
-            value={form.projectId}
-            onChange={(e) => setForm((p) => ({ ...p, projectId: e.target.value, milestone: '' }))}
-            className={inputClass(false)}
-          >
-            <option value="">{t('task.noProject') || 'Tanpa Project'}</option>
-            {projects.map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className={labelClass}>{t('task.assignee')}</label>
-          <div className="max-h-40 overflow-y-auto rounded-lg border border-line bg-background p-2 space-y-1 scrollbar-thin">
-            {users.length === 0 && (
-              <p className="text-xs text-muted px-2 py-1">Tidak ada user tersedia</p>
-            )}
-            {users.map((u) => {
-              const isChecked = form.assigneeIds.includes(u.id);
-              return (
-                <label
-                  key={u.id}
-                  className={`flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-surface ${
-                    isChecked ? 'bg-primary/5 text-primary' : 'text-ink'
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={isChecked}
-                    onChange={() => {
-                      setForm((p) => ({
-                        ...p,
-                        assigneeIds: isChecked
-                          ? p.assigneeIds.filter((id) => id !== u.id)
-                          : [...p.assigneeIds, u.id],
-                      }));
-                    }}
-                    className="h-4 w-4 rounded border-line text-primary focus:ring-primary/40"
-                  />
-                  <span className="flex-1 truncate">{u.name}</span>
-                  <span className="text-xs text-muted">{t(`auth.role.${u.role}`)}</span>
-                </label>
-              );
-            })}
-          </div>
-          {form.assigneeIds.length > 0 && (
-            <p className="mt-1 text-xs text-muted">
-              {form.assigneeIds.length} orang ditugaskan
-            </p>
-          )}
-        </div>
+      {/* Project */}
+      <div>
+        <label htmlFor="task-project" className={labelClass}>{t('task.project')}</label>
+        <select
+          id="task-project"
+          value={form.projectId}
+          onChange={(e) => handleProjectChange(e.target.value)}
+          className={inputClass(false)}
+        >
+          <option value="">{t('project.noClient') ? 'Tanpa Project' : 'Tanpa Project'}</option>
+          {projects.map((p) => (
+            <option key={p.id} value={p.id}>{p.name}</option>
+          ))}
+        </select>
+        {!form.projectId && (
+          <p className="mt-1 text-xs text-muted">{t('task.personalTaskHint')}</p>
+        )}
       </div>
 
-      {/* Milestone + Time Spent */}
-      <div className="grid gap-4 sm:grid-cols-2">
+      {/* Assignee — Only visible when project is selected */}
+      {form.projectId && (
+        <div>
+          <label className={labelClass}>{t('task.assignee')}</label>
+          {availableAssignees.length === 0 ? (
+            <div className="rounded-lg border border-line bg-muted/5 px-3 py-3 text-center">
+              <p className="text-xs text-muted">{t('task.noMembersInProject')}</p>
+            </div>
+          ) : (
+            <>
+              <div className="max-h-40 space-y-1 overflow-y-auto rounded-lg border border-line bg-background p-2 scrollbar-hide">
+                {availableAssignees.map((u) => {
+                  const isChecked = form.assigneeIds.includes(u.id);
+                  return (
+                    <label
+                      key={u.id}
+                      className={`flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-surface ${
+                        isChecked ? 'bg-primary/5 text-primary' : 'text-ink'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => {
+                          setForm((p) => ({
+                            ...p,
+                            assigneeIds: isChecked
+                              ? p.assigneeIds.filter((id) => id !== u.id)
+                              : [...p.assigneeIds, u.id],
+                          }));
+                        }}
+                        className="h-4 w-4 rounded border-line text-primary focus:ring-primary/40"
+                      />
+                      <span className="flex-1 truncate">{u.name}</span>
+                      <span className="text-xs text-muted">{t(`auth.role.${u.role}`)}</span>
+                    </label>
+                  );
+                })}
+              </div>
+              {form.assigneeIds.length > 0 && (
+                <p className="mt-1 text-xs text-muted">
+                  {form.assigneeIds.length} {t('task.assigneeCount')}
+                </p>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Milestone — Only visible when project is selected */}
+      {form.projectId && (
         <div>
           <label htmlFor="task-milestone" className={labelClass}>{t('task.milestone')}</label>
           <select
@@ -263,49 +300,54 @@ export function TaskForm({ initialData, submitLabel, onSubmit, onCancel }: TaskF
           >
             <option value="">
               {filteredMilestones.length === 0
-                ? (t('task.noMilestone') || 'Tidak ada milestone')
-                : (t('task.selectMilestone') || 'Pilih Milestone')}
+                ? t('task.noMilestoneAvailable')
+                : t('task.selectMilestone')}
             </option>
             {filteredMilestones.map((m) => (
               <option key={m.id} value={m.name}>{m.name}</option>
             ))}
           </select>
-          {form.projectId && filteredMilestones.length === 0 && (
-            <p className="mt-1 text-xs text-muted">Buat milestone terlebih dahulu di halaman Milestones</p>
+          {filteredMilestones.length === 0 && (
+            <p className="mt-1 text-xs text-muted">{t('task.createMilestoneHint')}</p>
           )}
+        </div>
+      )}
+
+      {/* Time Estimate (Hours) + Attachment */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label htmlFor="task-time" className={labelClass}>
+            {t('task.timeEstimate')}
+          </label>
+          <div className="relative">
+            <input
+              id="task-time"
+              type="number"
+              min={0}
+              step={0.5}
+              value={form.timeSpentHours}
+              onChange={(e) => setForm((p) => ({ ...p, timeSpentHours: Number(e.target.value) || 0 }))}
+              placeholder="0"
+              className={`${inputClass(false)} pr-12`}
+            />
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-muted">
+              {t('task.hours')}
+            </span>
+          </div>
+          <p className="mt-1 text-xs text-muted">{t('task.timeEstimateHint')}</p>
         </div>
 
         <div>
-          <label htmlFor="task-time" className={labelClass}>
-            {t('task.timeSpent')}
-            <span className="ml-1 text-xs font-normal text-muted">(estimasi menit)</span>
-          </label>
+          <label htmlFor="task-attachment" className={labelClass}>{t('task.attachment')}</label>
           <input
-            id="task-time"
-            type="number"
-            min={0}
-            value={form.timeSpentMinutes}
-            onChange={(e) => setForm((p) => ({ ...p, timeSpentMinutes: Number(e.target.value) || 0 }))}
-            placeholder="0"
+            id="task-attachment"
+            type="url"
+            value={form.attachmentUrl}
+            onChange={(e) => setForm((p) => ({ ...p, attachmentUrl: e.target.value }))}
+            placeholder={t('task.attachmentPlaceholder')}
             className={inputClass(false)}
           />
-          <p className="mt-1 text-xs text-muted">
-            Estimasi waktu pengerjaan. Jika melebihi deadline, task akan ditandai overdue.
-          </p>
         </div>
-      </div>
-
-      {/* Attachment URL */}
-      <div>
-        <label htmlFor="task-attachment" className={labelClass}>{t('task.attachment')}</label>
-        <input
-          id="task-attachment"
-          type="url"
-          value={form.attachmentUrl}
-          onChange={(e) => setForm((p) => ({ ...p, attachmentUrl: e.target.value }))}
-          placeholder={t('task.attachmentPlaceholder')}
-          className={inputClass(false)}
-        />
       </div>
 
       {/* Actions */}

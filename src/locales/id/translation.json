@@ -1,5 +1,8 @@
 {
-  "app": { "name": "Business Task Manager" },
+  "app": {
+    "name": "Business Task Manager",
+    "tagline": "Business Todo & Task Management"
+  },
   "nav": {
     "dashboard": "Dashboard",
     "tasks": "Tasks",
@@ -62,7 +65,17 @@
     "actual": "Aktual",
     "burndownNoData": "Belum cukup data deadline untuk burndown chart.",
     "noWorkload": "Belum ada task yang di-assign ke tim.",
-    "pendingApprovalTitle": "Task Menunggu Approval ({{count}})"
+    "pendingApprovalTitle": "Task Menunggu Approval ({{count}})",
+    "statusAhead": "Lebih Cepat",
+    "statusOnTrack": "Sesuai Jadwal",
+    "statusBehind": "Terlambat",
+    "tasksRemaining": "Task",
+    "timeline": "Waktu",
+    "completedToday": "Selesai",
+    "behindSchedule": "terlambat dari jadwal",
+    "aheadSchedule": "lebih cepat dari jadwal",
+    "remainingArea": "Sisa Task",
+    "totalTasksWithDeadline": "{{count}} task dengan deadline"
   },
   "task": {
     "add": "Tambah Task",
@@ -101,8 +114,16 @@
     "projectPlaceholder": "Nama atau ID project",
     "assignee": "Assignee",
     "assigneePlaceholder": "Nama atau ID anggota tim",
+    "assigneeCount": "orang ditugaskan",
     "milestone": "Milestone",
-    "timeSpent": "Waktu (menit)",
+    "timeEstimate": "Estimasi Waktu",
+    "timeEstimateHint": "Perkiraan durasi pengerjaan dalam jam.",
+    "hours": "jam",
+    "personalTaskHint": "Tanpa project, task ini bersifat pribadi (hanya untuk Anda).",
+    "noMembersInProject": "Belum ada anggota di project ini. Invite anggota terlebih dahulu.",
+    "noMilestoneAvailable": "Tidak ada milestone tersedia",
+    "selectMilestone": "Pilih Milestone",
+    "createMilestoneHint": "Buat milestone terlebih dahulu di halaman Milestones.",
     "attachment": "Lampiran (URL)",
     "attachmentPlaceholder": "https://...",
     "repeat": {
@@ -294,7 +315,24 @@
     "dangerDescription": "Menghapus seluruh data task dari aplikasi ini. Tindakan ini tidak dapat dibatalkan.",
     "deleteAll": "Hapus Semua Data",
     "deleteAllConfirmTitle": "Hapus semua data?",
-    "deleteAllConfirmMessage": "Seluruh task akan dihapus permanen dari LocalStorage. Tindakan ini tidak dapat dibatalkan."
+    "deleteAllConfirmMessage": "Seluruh task akan dihapus permanen dari LocalStorage. Tindakan ini tidak dapat dibatalkan.",
+    "companyProfile": "Profil Perusahaan",
+    "companyProfileDescription": "Kelola informasi dan branding organisasi Anda.",
+    "companyName": "Nama Perusahaan",
+    "tagline": "Tagline",
+    "website": "Website",
+    "contactEmail": "Email Kontak",
+    "contactPhone": "Telepon Kontak",
+    "address": "Alamat",
+    "changeLogo": "Ganti Logo",
+    "saveChanges": "Simpan Perubahan",
+    "savedSuccessfully": "Perubahan berhasil disimpan!",
+    "preferences": "Preferensi",
+    "personalProfile": "Profil Pribadi",
+    "personalProfileDescription": "Informasi akun Anda.",
+    "viewOnly": "Hanya Lihat",
+    "doubleClickToPreview": "Klik 2x untuk melihat ukuran penuh",
+    "clickOutsideToClose": "Klik di luar untuk menutup"
   },
   "validation": { "titleRequired": "Judul wajib diisi.", "priorityRequired": "Prioritas wajib dipilih.", "categoryRequired": "Kategori wajib dipilih.", "invalidDate": "Tanggal tidak valid." },
   "toast": {

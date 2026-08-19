@@ -215,7 +215,7 @@ export function TaskCard({ task, onToggle, onTogglePin, onEdit, onDelete, onView
             )}
 
             {task.timeSpentMinutes > 0 && (
-              <span className="inline-flex items-center gap-1 text-xs text-muted">⏱ {task.timeSpentMinutes}m</span>
+              <span className="inline-flex items-center gap-1 text-xs text-muted">⏱ {(task.timeSpentMinutes / 60).toFixed(1)}h</span>
             )}
 
             {task.dueDate && (

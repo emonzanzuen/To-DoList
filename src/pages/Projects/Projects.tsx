@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Trash2, Pencil, FolderOpen, Eye, Search } from 'lucide-react';
+import { Plus, Trash2, Pencil, FolderOpen, Eye, Search, Building2, Users, Calendar } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Badge } from '../../components/ui/Badge';
@@ -87,6 +87,12 @@ export default function ProjectsPage() {
 
   const handleSubmit = () => {
     if (!form.name.trim()) return;
+
+    // Get all admin & manager IDs to auto-add as members
+    const adminManagerIds = users
+      .filter((u) => u.role === 'admin' || u.role === 'manager')
+      .map((u) => u.id);
+
     if (editingProject) {
       updateProject(
         editingProject.id,
@@ -104,6 +110,7 @@ export default function ProjectsPage() {
         '',
         user?.id ?? '',
         formClientId || undefined,
+        adminManagerIds,
       );
     }
     setForm({ name: '', description: '', status: 'active' });
@@ -272,7 +279,10 @@ export default function ProjectsPage() {
 
                   {/* Client Name */}
                   {client && (
-                    <p className="text-xs text-primary font-medium truncate">🏢 {client.name}</p>
+                    <div className="flex items-center gap-1.5 text-xs font-medium text-primary">
+                      <Building2 className="h-3.5 w-3.5" />
+                      <span className="truncate">{client.name}</span>
+                    </div>
                   )}
 
                   <div className="border-t border-line" />
@@ -333,13 +343,15 @@ export default function ProjectsPage() {
                   {/* Team & Deadline */}
                   <div className="flex items-center justify-between text-xs text-muted">
                     <div className="flex items-center gap-1">
-                      <span>👥 {p.memberIds.length} {t('project.members')}</span>
+                      <Users className="h-3.5 w-3.5" />
+                      <span>{p.memberIds.length} {t('project.members')}</span>
                     </div>
                     {nearestDeadline && (
                       <div className={`flex items-center gap-1 ${
                         new Date(`${nearestDeadline}T23:59:59`).getTime() < Date.now() ? 'text-danger font-medium' : ''
                       }`}>
-                        📅 {formatDate(nearestDeadline, i18n.language)}
+                        <Calendar className="h-3.5 w-3.5" />
+                        {formatDate(nearestDeadline, i18n.language)}
                       </div>
                     )}
                   </div>

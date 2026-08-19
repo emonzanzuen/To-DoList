@@ -16,7 +16,7 @@ export const CATEGORIES: TaskCategory[] = ['work', 'study', 'personal', 'shoppin
 export const REPEAT_INTERVALS: RepeatInterval[] = ['none', 'daily', 'weekly', 'monthly'];
 
 // ← UPGRADE: 4 task statuses untuk business app
-export const TASK_STATUSES: TaskStatus[] = ['pending', 'in_progress', 'completed', 'waiting'];
+export const TASK_STATUSES: TaskStatus[] = ['pending', 'in_progress', 'waiting_approval', 'completed'];
 
 // ← UPGRADE: Priority order termasuk urgent (paling atas)
 export const PRIORITY_ORDER: Record<TaskPriority, number> = {
@@ -47,8 +47,8 @@ export const PRIORITY_DOT: Record<TaskPriority, string> = {
 export const STATUS_BADGE: Record<TaskStatus, string> = {
   pending: 'bg-muted/10 text-muted',
   in_progress: 'bg-info/10 text-info',
+  waiting_approval: 'bg-warning/10 text-warning',
   completed: 'bg-success/10 text-success',
-  waiting: 'bg-warning/10 text-warning',
 };
 
 export const CATEGORY_DOT: Record<TaskCategory, string> = {

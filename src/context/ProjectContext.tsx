@@ -16,7 +16,7 @@ const PROJECTS_STORAGE_KEY = 'app_projects';
 
 interface ProjectContextValue {
   projects: Project[];
-  addProject: (name: string, description: string, milestone: string, creatorId: string, clientId?: string) => void;
+  addProject: (name: string, description: string, milestone: string, creatorId: string, clientId?: string, extraMemberIds?: string[]) => void;
   updateProject: (id: string, name: string, description: string, milestone: string, status: Project['status'], clientId?: string) => void;
   deleteProject: (id: string) => void;
   getProjectById: (id: string) => Project | undefined;
@@ -58,15 +58,23 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   }, [projects]);
 
   const addProject = useCallback(
-    (name: string, description: string, milestone: string, creatorId: string, clientId?: string) => {
+    (name: string, description: string, milestone: string, creatorId: string, clientId?: string, extraMemberIds?: string[]) => {
       const now = nowISO();
+
+      // Build initial member list: creator + extra members (admins, managers)
+      const memberSet = new Set<string>();
+      if (creatorId) memberSet.add(creatorId);
+      if (extraMemberIds) {
+        extraMemberIds.forEach((id) => memberSet.add(id));
+      }
+
       const project: Project = {
         id: generateId(),
         name: name.trim(),
         description: description.trim(),
         milestone: milestone || null,
         status: 'active',
-        memberIds: creatorId ? [creatorId] : [],
+        memberIds: Array.from(memberSet),
         clientId: clientId || null,
         createdBy: creatorId,
         createdAt: now,
