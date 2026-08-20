@@ -18,6 +18,7 @@ import {
   Star,
   Trash2,
   Eye,
+  Lock,
   type LucideIcon,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -30,10 +31,10 @@ import { useAuth } from '../../context/AuthContext';
 
 interface TaskCardProps {
   task: Task;
-  onToggle: (id: string) => void;
-  onTogglePin: (id: string) => void;
-  onEdit: (task: Task) => void;
-  onDelete: (task: Task) => void;
+  onToggle?: (id: string) => void;
+  onTogglePin?: (id: string) => void;
+  onEdit?: (task: Task) => void;
+  onDelete?: (task: Task) => void;
   onViewDetail?: (task: Task) => void;
   onUpdateStatus?: (id: string, status: Task['status']) => void;
 }
@@ -77,6 +78,7 @@ export function TaskCard({ task, onToggle, onTogglePin, onEdit, onDelete, onView
   const CurrentStatusIcon = currentStatusConfig.icon;
 
   const handleOpenStatusMenu = () => {
+    if (!onUpdateStatus) return;
     if (statusButtonRef.current) {
       const rect = statusButtonRef.current.getBoundingClientRect();
       setMenuPosition({
@@ -99,7 +101,7 @@ export function TaskCard({ task, onToggle, onTogglePin, onEdit, onDelete, onView
       )}
 
       <div className="flex items-start gap-3">
-        {/* Status Dropdown */}
+        {/* Status Dropdown / Static Icon */}
         <div className="mt-0.5 shrink-0">
           {onUpdateStatus ? (
             <button
@@ -112,14 +114,17 @@ export function TaskCard({ task, onToggle, onTogglePin, onEdit, onDelete, onView
               <CurrentStatusIcon className="h-4 w-4" />
             </button>
           ) : (
-            <div className={`flex h-7 w-7 items-center justify-center rounded-lg ${currentStatusConfig.bg} ${currentStatusConfig.color}`}>
+            <div
+              className={`flex h-7 w-7 items-center justify-center rounded-lg ${currentStatusConfig.bg} ${currentStatusConfig.color}`}
+              title={!onToggle ? t('task.notYourTask') : undefined}
+            >
               <CurrentStatusIcon className="h-4 w-4" />
             </div>
           )}
         </div>
 
         {/* Portal Dropdown Menu */}
-        {showStatusMenu && createPortal(
+        {showStatusMenu && onUpdateStatus && createPortal(
           <>
             <div className="fixed inset-0 z-[9998]" onClick={() => setShowStatusMenu(false)} />
             <div
@@ -134,7 +139,7 @@ export function TaskCard({ task, onToggle, onTogglePin, onEdit, onDelete, onView
                     key={statusKey}
                     type="button"
                     onClick={() => {
-                      onUpdateStatus!(task.id, statusKey);
+                      onUpdateStatus(task.id, statusKey);
                       setShowStatusMenu(false);
                     }}
                     className={`flex w-full items-center gap-2 px-3 py-2 text-xs transition-colors ${
@@ -153,7 +158,10 @@ export function TaskCard({ task, onToggle, onTogglePin, onEdit, onDelete, onView
         )}
 
         <div className="min-w-0 flex-1">
-          <h3 className={`truncate text-sm font-semibold ${completed ? 'text-muted line-through' : 'text-ink'}`}>
+          <h3
+            className={`truncate text-sm font-semibold ${completed ? 'text-muted line-through' : 'text-ink'} ${onViewDetail ? 'cursor-pointer hover:text-primary' : ''}`}
+            onClick={() => onViewDetail?.(task)}
+          >
             {task.title}
           </h3>
           {task.description && (
@@ -215,7 +223,10 @@ export function TaskCard({ task, onToggle, onTogglePin, onEdit, onDelete, onView
             )}
 
             {task.timeSpentMinutes > 0 && (
-              <span className="inline-flex items-center gap-1 text-xs text-muted">⏱ {(task.timeSpentMinutes / 60).toFixed(1)}h</span>
+              <span className="inline-flex items-center gap-1 text-xs text-muted">
+                <Clock className="h-3 w-3" aria-hidden="true" />
+                {(task.timeSpentMinutes / 60).toFixed(1)}h
+              </span>
             )}
 
             {task.dueDate && (
@@ -241,21 +252,23 @@ export function TaskCard({ task, onToggle, onTogglePin, onEdit, onDelete, onView
             </button>
           )}
 
-          <button
-            type="button"
-            onClick={() => onTogglePin(task.id)}
-            aria-label={task.isPinned ? t('task.unpin') : t('task.pin')}
-            aria-pressed={task.isPinned}
-            className={`rounded-lg p-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning/50 ${
-              task.isPinned
-                ? 'text-warning hover:bg-warning/10'
-                : 'text-muted hover:bg-background hover:text-warning'
-            }`}
-          >
-            <Star className="h-4 w-4" aria-hidden="true" fill={task.isPinned ? 'currentColor' : 'none'} />
-          </button>
+          {onTogglePin ? (
+            <button
+              type="button"
+              onClick={() => onTogglePin(task.id)}
+              aria-label={task.isPinned ? t('task.unpin') : t('task.pin')}
+              aria-pressed={task.isPinned}
+              className={`rounded-lg p-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning/50 ${
+                task.isPinned
+                  ? 'text-warning hover:bg-warning/10'
+                  : 'text-muted hover:bg-background hover:text-warning'
+              }`}
+            >
+              <Star className="h-4 w-4" aria-hidden="true" fill={task.isPinned ? 'currentColor' : 'none'} />
+            </button>
+          ) : null}
 
-          {task.assigneeIds.some((id) => canEditTask(id)) && (
+          {onEdit && task.assigneeIds.some((id) => canEditTask(id)) ? (
             <button
               type="button"
               onClick={() => onEdit(task)}
@@ -264,9 +277,9 @@ export function TaskCard({ task, onToggle, onTogglePin, onEdit, onDelete, onView
             >
               <Pencil className="h-4 w-4" aria-hidden="true" />
             </button>
-          )}
+          ) : null}
 
-          {canDeleteTask && (
+          {onDelete && canDeleteTask ? (
             <button
               type="button"
               onClick={() => onDelete(task)}
@@ -275,6 +288,13 @@ export function TaskCard({ task, onToggle, onTogglePin, onEdit, onDelete, onView
             >
               <Trash2 className="h-4 w-4" aria-hidden="true" />
             </button>
+          ) : null}
+
+          {/* Lock indicator when no interaction handlers provided */}
+          {!onToggle && !onEdit && !onDelete && (
+            <div className="rounded-lg p-2 text-muted" title={t('task.notYourTask')}>
+              <Lock className="h-4 w-4" aria-hidden="true" />
+            </div>
           )}
         </div>
       </div>

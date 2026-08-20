@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Check, Plus, Trash2, MessageSquare, Paperclip, Clock, ShieldCheck, ShieldX, ShieldAlert } from 'lucide-react';
+import { Check, Plus, Trash2, MessageSquare, Paperclip, Clock, ShieldCheck, ShieldX, ShieldAlert, Calendar } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
@@ -129,7 +129,11 @@ export function TaskDetailModal({ task, onClose }: TaskDetailModalProps) {
 
   return (
     <Modal open={!!task} onClose={onClose} title={task.title}>
-      <div className="space-y-5 max-h-[65vh] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-line scrollbar-track-transparent">
+      <div
+        className="space-y-5 max-h-[65vh] overflow-y-auto overscroll-contain pr-1 scrollbar-hide"
+        style={{ WebkitOverflowScrolling: 'touch' }}
+        data-lenis-prevent
+      >
         {/* Description */}
         {task.description && (
           <p className="text-sm text-muted">{task.description}</p>
@@ -138,10 +142,14 @@ export function TaskDetailModal({ task, onClose }: TaskDetailModalProps) {
         {/* Meta Info */}
         <div className="flex flex-wrap gap-2 text-xs text-muted">
           {task.dueDate && (
-            <span className="flex items-center gap-1">📅 {formatDate(task.dueDate, i18n.language)}</span>
+            <span className="flex items-center gap-1">
+              <Calendar className="h-3 w-3" /> {formatDate(task.dueDate, i18n.language)}
+            </span>
           )}
           {task.timeSpentMinutes > 0 && (
-            <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {task.timeSpentMinutes}m</span>
+            <span className="flex items-center gap-1">
+              <Clock className="h-3 w-3" /> {(task.timeSpentMinutes / 60).toFixed(1)}h
+            </span>
           )}
           {task.attachmentUrl && (
             <a href={task.attachmentUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-primary hover:underline">
@@ -159,7 +167,7 @@ export function TaskDetailModal({ task, onClose }: TaskDetailModalProps) {
             <div className="flex items-center gap-2">
               {approvalBadge[approvalStatus]}
               {approvalStatus === 'none' && (
-                <span className="text-xs text-muted">Belum diajukan</span>
+                <span className="text-xs text-muted">{t('approval.none') || 'Belum diajukan'}</span>
               )}
             </div>
             <div className="flex flex-wrap gap-2">
@@ -167,7 +175,7 @@ export function TaskDetailModal({ task, onClose }: TaskDetailModalProps) {
                 <Button size="sm" variant="secondary" onClick={submitForApproval}>{t('approval.submit')}</Button>
               )}
               {approvalStatus === 'none' && canApprove && (
-                <span className="text-xs text-muted italic">Menunggu pengajuan dari anggota tim</span>
+                <span className="text-xs text-muted italic">{t('approval.notRequired')}</span>
               )}
               {approvalStatus === 'pending' && canApprove && (
                 <>
@@ -176,7 +184,7 @@ export function TaskDetailModal({ task, onClose }: TaskDetailModalProps) {
                 </>
               )}
               {approvalStatus === 'pending' && !canApprove && (
-                <span className="text-xs text-muted italic">Menunggu persetujuan Manager/Admin</span>
+                <span className="text-xs text-muted italic">{t('approval.pending')}</span>
               )}
               {approvalStatus !== 'none' && canApprove && (
                 <Button size="sm" variant="secondary" onClick={resetApproval}>{t('approval.reset')}</Button>
@@ -188,7 +196,7 @@ export function TaskDetailModal({ task, onClose }: TaskDetailModalProps) {
           <div className="rounded-xl border border-line bg-background p-3">
             <div className="flex items-center gap-2 text-xs text-muted">
               <ShieldCheck className="h-4 w-4 text-success" />
-              <span>Task ini dikelola oleh Admin/Manager — approval tidak diperlukan</span>
+              <span>{t('approval.notRequired')}</span>
             </div>
           </div>
         )}

@@ -1,12 +1,12 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
-import { useState } from 'react';
 import { Button } from '../../components/ui/Button';
-import { Badge } from '../../components/ui/Badge';
 import { useTasks } from '../../context/TaskContext';
+import { useAuth } from '../../context/AuthContext';
 import { usePageEntrance } from '../../animations/gsap/usePageEntrance';
 import { PRIORITY_DOT } from '../../constants';
+import { TaskDetailModal } from '../../components/task/TaskDetailModal';
 import type { Task } from '../../types/task';
 
 function getDaysInMonth(year: number, month: number) {
@@ -20,8 +20,20 @@ function getFirstDayOfMonth(year: number, month: number) {
 export default function CalendarPage() {
   const { t } = useTranslation();
   const { tasks } = useTasks();
+  const { user } = useAuth();
   const entranceRef = usePageEntrance();
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [viewingTask, setViewingTask] = useState<Task | null>(null);
+
+  const isAdminOrManager = user?.role === 'admin' || user?.role === 'manager';
+
+  // Filter tasks berdasarkan role
+  const visibleTasks = useMemo(() => {
+    if (!user) return [];
+    if (isAdminOrManager) return tasks;
+    // Member: hanya task yang di-assign ke mereka
+    return tasks.filter((task) => task.assigneeIds.includes(user.id));
+  }, [tasks, user, isAdminOrManager]);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -31,14 +43,14 @@ export default function CalendarPage() {
 
   const tasksByDate = useMemo(() => {
     const map: Record<string, Task[]> = {};
-    tasks.forEach((task) => {
+    visibleTasks.forEach((task) => {
       if (task.dueDate) {
         if (!map[task.dueDate]) map[task.dueDate] = [];
         map[task.dueDate].push(task);
       }
     });
     return map;
-  }, [tasks]);
+  }, [visibleTasks]);
 
   const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
   const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
@@ -87,7 +99,11 @@ export default function CalendarPage() {
                 </span>
                 <div className="space-y-0.5">
                   {dayTasks.slice(0, 3).map((task) => (
-                    <div key={task.id} className="flex items-center gap-1 truncate rounded px-1 py-0.5 text-[10px] bg-background border border-line">
+                    <div
+                      key={task.id}
+                      className="flex cursor-pointer items-center gap-1 truncate rounded border border-line bg-background px-1 py-0.5 text-[10px] transition-colors hover:border-primary/40 hover:bg-primary/5"
+                      onClick={() => setViewingTask(task)}
+                    >
                       <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${PRIORITY_DOT[task.priority]}`} />
                       <span className={`truncate ${task.status === 'completed' ? 'line-through text-muted' : 'text-ink'}`}>
                         {task.title}
@@ -103,6 +119,9 @@ export default function CalendarPage() {
           })}
         </div>
       </div>
+
+      {/* Task Detail Modal */}
+      <TaskDetailModal task={viewingTask} onClose={() => setViewingTask(null)} />
     </div>
   );
 }

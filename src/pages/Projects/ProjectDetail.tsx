@@ -8,6 +8,9 @@ import { ProgressBar } from '../../components/ui/ProgressBar';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Modal } from '../../components/ui/Modal';
 import { TaskCard } from '../../components/task/TaskCard';
+import { EditTaskModal } from '../../components/task/EditTaskModal';
+import { DeleteTaskModal } from '../../components/task/DeleteTaskModal';
+import { TaskDetailModal } from '../../components/task/TaskDetailModal';
 import { useProjects } from '../../context/ProjectContext';
 import { useTasks } from '../../context/TaskContext';
 import { useMilestones } from '../../context/MilestoneContext';
@@ -15,6 +18,7 @@ import { useAuth } from '../../context/AuthContext';
 import { usePageEntrance } from '../../animations/gsap/usePageEntrance';
 import { formatDate } from '../../utils/dateUtils';
 import type { ProjectStatus } from '../../types/project';
+import type { Task } from '../../types/task';
 
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
@@ -28,6 +32,9 @@ export default function ProjectDetail() {
 
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [deletingTask, setDeletingTask] = useState<Task | null>(null);
+  const [viewingTask, setViewingTask] = useState<Task | null>(null);
 
   const project = projects.find((p) => p.id === id);
 
@@ -70,7 +77,6 @@ export default function ProjectDetail() {
     return milestones.filter((m) => m.projectId === project.id);
   }, [milestones, project]);
 
-  // Members: project memberIds + admin/manager (always visible)
   const members = useMemo(() => {
     if (!project) return [];
     return users.filter((u) => {
@@ -79,6 +85,12 @@ export default function ProjectDetail() {
       return false;
     });
   }, [users, project]);
+
+  // Cek apakah user adalah assignee dari task
+  const isTaskOwner = (task: Task) => {
+    if (!user) return false;
+    return task.assigneeIds.includes(user.id);
+  };
 
   if (!project || !canAccess) {
     return (
@@ -302,7 +314,7 @@ export default function ProjectDetail() {
         )}
       </div>
 
-      {/* Tasks Terbaru — Menggunakan TaskCard dengan update status */}
+      {/* Tasks Terbaru — Admin/Manager full access, Member hanya task sendiri */}
       <div data-animate className="space-y-3">
         <h2 className="text-sm font-semibold text-ink flex items-center gap-2">
           <ListChecks className="h-4 w-4" /> {t('project.recentTasks', { shown: Math.min(projectTasks.length, 5), total: stats.total })}
@@ -314,20 +326,29 @@ export default function ProjectDetail() {
           </div>
         ) : (
           <div className="space-y-2">
-            {projectTasks.slice(0, 5).map((task) => (
-              <TaskCard
-                key={task.id}
-                task={task}
-                onToggle={toggleTask}
-                onTogglePin={togglePin}
-                onUpdateStatus={updateTaskStatus}
-                onEdit={() => {}}
-                onDelete={() => {}}
-              />
-            ))}
+            {projectTasks.slice(0, 5).map((task) => {
+              const canInteract = isAdminOrManager || isTaskOwner(task);
+              return (
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  onToggle={canInteract ? toggleTask : undefined}
+                  onTogglePin={canInteract ? togglePin : undefined}
+                  onUpdateStatus={canInteract ? updateTaskStatus : undefined}
+                  onEdit={canInteract ? setEditingTask : undefined}
+                  onDelete={canInteract ? setDeletingTask : undefined}
+                  onViewDetail={setViewingTask}
+                />
+              );
+            })}
           </div>
         )}
       </div>
+
+      {/* Task Modals */}
+      <EditTaskModal task={editingTask} onClose={() => setEditingTask(null)} />
+      <DeleteTaskModal task={deletingTask} onClose={() => setDeletingTask(null)} />
+      <TaskDetailModal task={viewingTask} onClose={() => setViewingTask(null)} />
 
       {/* Invite Modal */}
       <Modal open={showInviteModal} onClose={() => setShowInviteModal(false)} title={t('project.inviteTitle')}>

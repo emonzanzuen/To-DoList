@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Calendar, CheckCircle2, Flag, FolderOpen } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
@@ -7,6 +7,9 @@ import { Badge } from '../../components/ui/Badge';
 import { ProgressBar } from '../../components/ui/ProgressBar';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { TaskCard } from '../../components/task/TaskCard';
+import { EditTaskModal } from '../../components/task/EditTaskModal';
+import { DeleteTaskModal } from '../../components/task/DeleteTaskModal';
+import { TaskDetailModal } from '../../components/task/TaskDetailModal';
 import { useMilestones } from '../../context/MilestoneContext';
 import { useTasks } from '../../context/TaskContext';
 import { useProjects } from '../../context/ProjectContext';
@@ -14,6 +17,7 @@ import { useAuth } from '../../context/AuthContext';
 import { usePageEntrance } from '../../animations/gsap/usePageEntrance';
 import { formatDate } from '../../utils/dateUtils';
 import type { MilestoneStatus } from '../../types/milestone';
+import type { Task } from '../../types/task';
 
 export default function MilestoneDetail() {
   const { id } = useParams<{ id: string }>();
@@ -24,6 +28,12 @@ export default function MilestoneDetail() {
   const { projects } = useProjects();
   const { user } = useAuth();
   const entranceRef = usePageEntrance();
+
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [deletingTask, setDeletingTask] = useState<Task | null>(null);
+  const [viewingTask, setViewingTask] = useState<Task | null>(null);
+
+  const isAdminOrManager = user?.role === 'admin' || user?.role === 'manager';
 
   const milestone = milestones.find((m) => m.id === id);
 
@@ -48,6 +58,12 @@ export default function MilestoneDetail() {
   }, [milestoneTasks]);
 
   const project = milestone ? projects.find((p) => p.id === milestone.projectId) : null;
+
+  // Cek apakah user adalah assignee dari task
+  const isTaskOwner = (task: Task) => {
+    if (!user) return false;
+    return task.assigneeIds.includes(user.id);
+  };
 
   if (!milestone) {
     return (
@@ -142,7 +158,7 @@ export default function MilestoneDetail() {
         </div>
       </div>
 
-      {/* Tasks List — Menggunakan TaskCard dengan update status */}
+      {/* Tasks List — Admin/Manager full access, Member hanya task sendiri */}
       <div data-animate>
         <h2 className="mb-3 text-sm font-semibold text-ink">
           {t('milestone.tasksInMilestone', { count: stats.total })}
@@ -156,20 +172,29 @@ export default function MilestoneDetail() {
           />
         ) : (
           <div className="space-y-2">
-            {milestoneTasks.map((task) => (
-              <TaskCard
-                key={task.id}
-                task={task}
-                onToggle={toggleTask}
-                onTogglePin={togglePin}
-                onUpdateStatus={updateTaskStatus}
-                onEdit={() => {}}
-                onDelete={() => {}}
-              />
-            ))}
+            {milestoneTasks.map((task) => {
+              const canInteract = isAdminOrManager || isTaskOwner(task);
+              return (
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  onToggle={canInteract ? toggleTask : undefined}
+                  onTogglePin={canInteract ? togglePin : undefined}
+                  onUpdateStatus={canInteract ? updateTaskStatus : undefined}
+                  onEdit={canInteract ? setEditingTask : undefined}
+                  onDelete={canInteract ? setDeletingTask : undefined}
+                  onViewDetail={setViewingTask}
+                />
+              );
+            })}
           </div>
         )}
       </div>
+
+      {/* Task Modals */}
+      <EditTaskModal task={editingTask} onClose={() => setEditingTask(null)} />
+      <DeleteTaskModal task={deletingTask} onClose={() => setDeletingTask(null)} />
+      <TaskDetailModal task={viewingTask} onClose={() => setViewingTask(null)} />
     </div>
   );
 }
