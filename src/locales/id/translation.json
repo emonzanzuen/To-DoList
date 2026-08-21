@@ -302,7 +302,8 @@
     "noClient": "Tanpa Klien",
     "searchPlaceholder": "Cari project berdasarkan nama atau deskripsi...",
     "noSearchResults": "Project tidak ditemukan",
-    "noSearchResultsDescription": "Coba ubah kata kunci pencarian Anda."
+    "noSearchResultsDescription": "Coba ubah kata kunci pencarian Anda.",
+    "project.deadline": "Tenggat Waktu"
   },
   "settings": {
     "title": "Pengaturan",

@@ -8,6 +8,7 @@ export interface Project {
   status: ProjectStatus;
   memberIds: string[];
   clientId: string | null;
+  dueDate: string | null;
   createdBy: string;
   createdAt: string;
   updatedAt: string;

@@ -289,7 +289,8 @@
     "noClient": "No Client",
     "searchPlaceholder": "Search projects by name or description...",
     "noSearchResults": "No projects found",
-    "noSearchResultsDescription": "Try adjusting your search query."
+    "noSearchResultsDescription": "Try adjusting your search query.",
+    "project.deadline": "Deadline"
   },
   "settings": {
     "title": "Settings",

@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import { ToastProvider } from './context/ToastContext';
@@ -23,6 +24,46 @@ import ClientDetail from './pages/Clients/ClientDetail';
 import ActivityLogPage from './pages/ActivityLog/ActivityLog';
 import Settings from './pages/Settings/Settings';
 import Login from './pages/Login/Login';
+import { readStorage } from './utils/storage';
+
+const COMPANY_KEY = 'app_company_profile';
+const DEFAULT_TITLE = 'To-Do List';
+
+function updateDocumentBranding() {
+  try {
+    const data = readStorage<unknown>(COMPANY_KEY, null);
+
+    if (!data || typeof data !== 'object') {
+      document.title = DEFAULT_TITLE;
+      return;
+    }
+
+    const profile = data as Record<string, unknown>;
+    const companyName = typeof profile.name === 'string' ? profile.name.trim() : '';
+    const logoUrl = typeof profile.logoUrl === 'string' ? profile.logoUrl.trim() : '';
+
+    // Update browser tab title
+    document.title = companyName || DEFAULT_TITLE;
+
+    // Update favicon
+    if (logoUrl) {
+      let favicon = document.querySelector<HTMLLinkElement>('link#dynamic-favicon');
+
+      // Jika link favicon belum ada di index.html, buat otomatis
+      if (!favicon) {
+        favicon = document.createElement('link');
+        favicon.id = 'dynamic-favicon';
+        favicon.rel = 'icon';
+        document.head.appendChild(favicon);
+      }
+
+      favicon.type = logoUrl.startsWith('data:image/svg') ? 'image/svg+xml' : 'image/png';
+      favicon.href = logoUrl;
+    }
+  } catch {
+    document.title = DEFAULT_TITLE;
+  }
+}
 
 function AppRoutes() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -66,6 +107,7 @@ function AppRoutes() {
         <Route path="/activity" element={<ActivityLogPage />} />
         <Route path="/audit-log" element={<ActivityLogPage />} />
         <Route path="/settings" element={<Settings />} />
+
         {/* Redirect /login ke dashboard jika sudah login */}
         <Route path="/login" element={<Navigate to="/" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
@@ -75,6 +117,42 @@ function AppRoutes() {
 }
 
 export default function App() {
+  useEffect(() => {
+    updateDocumentBranding();
+
+    const handleStorage = (event: StorageEvent) => {
+      if (!event.key || event.key === COMPANY_KEY) {
+        updateDocumentBranding();
+      }
+    };
+
+    const handleFocus = () => {
+      updateDocumentBranding();
+    };
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        updateDocumentBranding();
+      }
+    };
+
+    const handleCompanyProfileUpdated = () => {
+      updateDocumentBranding();
+    };
+
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('company-profile-updated', handleCompanyProfileUpdated);
+
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('company-profile-updated', handleCompanyProfileUpdated);
+    };
+  }, []);
+
   return (
     <ThemeProvider>
       <ToastProvider>

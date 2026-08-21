@@ -16,8 +16,8 @@ const PROJECTS_STORAGE_KEY = 'app_projects';
 
 interface ProjectContextValue {
   projects: Project[];
-  addProject: (name: string, description: string, milestone: string, creatorId: string, clientId?: string, extraMemberIds?: string[]) => void;
-  updateProject: (id: string, name: string, description: string, milestone: string, status: Project['status'], clientId?: string) => void;
+  addProject: (name: string, description: string, milestone: string, creatorId: string, clientId?: string, extraMemberIds?: string[], dueDate?: string) => void;
+  updateProject: (id: string, name: string, description: string, milestone: string, status: Project['status'], clientId?: string, dueDate?: string) => void;
   deleteProject: (id: string) => void;
   getProjectById: (id: string) => Project | undefined;
   inviteMember: (projectId: string, userId: string) => void;
@@ -41,6 +41,7 @@ function loadProjects(): Project[] {
       status: (['active', 'completed', 'archived'].includes(String(item.status)) ? String(item.status) : 'active') as Project['status'],
       memberIds: Array.isArray(item.memberIds) ? item.memberIds.filter((id): id is string => typeof id === 'string') : [],
       clientId: (item.clientId as string | null) ?? null,
+      dueDate: (item.dueDate as string | null) ?? null,
       createdBy: String(item.createdBy ?? ''),
       createdAt: String(item.createdAt ?? new Date().toISOString()),
       updatedAt: String(item.updatedAt ?? new Date().toISOString()),
@@ -58,7 +59,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   }, [projects]);
 
   const addProject = useCallback(
-    (name: string, description: string, milestone: string, creatorId: string, clientId?: string, extraMemberIds?: string[]) => {
+    (name: string, description: string, milestone: string, creatorId: string, clientId?: string, extraMemberIds?: string[], dueDate?: string) => {
       const now = nowISO();
 
       // Build initial member list: creator + extra members (admins, managers)
@@ -76,6 +77,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         status: 'active',
         memberIds: Array.from(memberSet),
         clientId: clientId || null,
+        dueDate: dueDate || null,
         createdBy: creatorId,
         createdAt: now,
         updatedAt: now,
@@ -86,7 +88,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   );
 
   const updateProject = useCallback(
-    (id: string, name: string, description: string, milestone: string, status: Project['status'], clientId?: string) => {
+    (id: string, name: string, description: string, milestone: string, status: Project['status'], clientId?: string, dueDate?: string) => {
       setProjects((prev) =>
         prev.map((p) =>
           p.id === id
@@ -97,6 +99,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
                 milestone: milestone || null,
                 status,
                 clientId: clientId !== undefined ? (clientId || null) : p.clientId,
+                dueDate: dueDate !== undefined ? (dueDate || null) : p.dueDate,
                 updatedAt: nowISO(),
               }
             : p,
