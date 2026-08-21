@@ -24,11 +24,28 @@ import ActivityLogPage from './pages/ActivityLog/ActivityLog';
 import Settings from './pages/Settings/Settings';
 import Login from './pages/Login/Login';
 
-function ProtectedRoutes() {
-  const { isAuthenticated } = useAuth();
+function AppRoutes() {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  // Loading screen saat auth initialize dari localStorage
+  if (isLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <p className="text-sm text-muted">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return (
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    );
   }
 
   return (
@@ -49,30 +66,12 @@ function ProtectedRoutes() {
         <Route path="/activity" element={<ActivityLogPage />} />
         <Route path="/audit-log" element={<ActivityLogPage />} />
         <Route path="/settings" element={<Settings />} />
+        {/* Redirect /login ke dashboard jika sudah login */}
+        <Route path="/login" element={<Navigate to="/" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
   );
-}
-
-function PublicRoutes() {
-  const { isAuthenticated } = useAuth();
-
-  if (isAuthenticated) {
-    return <Navigate to="/" replace />;
-  }
-
-  return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="*" element={<Navigate to="/login" replace />} />
-    </Routes>
-  );
-}
-
-function AppRoutes() {
-  const { isAuthenticated } = useAuth();
-  return isAuthenticated ? <ProtectedRoutes /> : <PublicRoutes />;
 }
 
 export default function App() {

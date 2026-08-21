@@ -13,6 +13,7 @@ interface AuthContextValue {
   logout: () => void;
   refreshUsers: () => void;
   isAuthenticated: boolean;
+  isLoading: boolean;
   isAdmin: boolean;
   isManager: boolean;
   isMember: boolean;
@@ -56,18 +57,31 @@ function findUserById(userId: string): User | null {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(() => {
-    const storedId = readStorage<string>(AUTH_STORAGE_KEY, '');
-    if (!storedId) return null;
-    return findUserById(storedId);
-  });
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Counter untuk trigger refresh allUsers
   const [usersVersion, setUsersVersion] = useState(0);
 
+  // Initialize auth dari localStorage (sekali saat mount)
+  useEffect(() => {
+    try {
+      const storedId = readStorage<string>(AUTH_STORAGE_KEY, '');
+      if (storedId) {
+        const found = findUserById(storedId);
+        if (found) {
+          setUser(found);
+        }
+      }
+    } catch {
+      // ignore parse errors
+    }
+    setIsLoading(false);
+  }, []);
+
   // Refresh user dari allUsers saat storage berubah (misal Admin edit user di tab lain)
   useEffect(() => {
-    if (user) {
+    if (!isLoading && user) {
       const refreshed = findUserById(user.id);
       if (refreshed && JSON.stringify(refreshed) !== JSON.stringify(user)) {
         setUser(refreshed);
@@ -90,7 +104,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshUsers = useCallback(() => {
     setUsersVersion((v) => v + 1);
-    // Juga refresh current user jika ada
     if (user) {
       const refreshed = findUserById(user.id);
       if (refreshed) {
@@ -101,8 +114,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const role: UserRole | null = user?.role ?? null;
 
-  // Gabungkan semua users: MOCK_USERS + overrides + customUsers
-  // usersVersion sebagai dependency agar re-compute saat refreshUsers dipanggil
   const allUsers = useMemo(() => getAllUsers(), [user, usersVersion]);
 
   const value = useMemo<AuthContextValue>(() => ({
@@ -112,6 +123,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     logout,
     refreshUsers,
     isAuthenticated: user !== null,
+    isLoading,
     isAdmin: role === 'admin',
     isManager: role === 'manager',
     isMember: role === 'member',
@@ -128,7 +140,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (role === 'admin' || role === 'manager') return true;
       return assigneeId === user.id;
     },
-  }), [user, allUsers, login, logout, refreshUsers, role]);
+  }), [user, allUsers, login, logout, refreshUsers, role, isLoading]);
 
   return (
     <AuthContext.Provider value={value}>
